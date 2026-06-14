@@ -1,0 +1,3684 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Housing Feasibility</title>
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+/* ── iOS / Safari input fix ─────────────────────────────────── */
+input,select,textarea,button{
+  -webkit-appearance:none;
+  appearance:none;
+  border-radius:0;
+}
+input[type=number]{-moz-appearance:textfield}
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+/* Force correct background — iOS ignores background on form elements */
+input,select{
+  background-color:var(--input-bg)!important;
+  color:var(--text)!important;
+  -webkit-text-fill-color:var(--text)!important;
+}
+/* iOS autocomplete yellow bg override */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus{
+  -webkit-box-shadow:0 0 0 1000px var(--input-bg) inset!important;
+  -webkit-text-fill-color:var(--text)!important;
+  transition:background-color 9999s ease-out;
+}
+
+
+/* ── LIGHT (default) ─────────────────────────────────────── */
+:root{
+  /* surfaces — warm white base, distinct layer steps */
+  --bg:#f8f7f5;        /* page / right panel — off-white */
+  --bg2:#ffffff;       /* left sidebar — pure white for contrast */
+  --bg3:#f0eeec;       /* inset areas, KPI cards */
+  /* borders — crisper than before */
+  --border:rgba(0,0,0,0.09);
+  --border2:rgba(0,0,0,0.18);
+  /* text — richer hierarchy */
+  --text:#0f0f0f;
+  --text2:#4a4a4a;
+  --text3:#8a8a8a;
+  /* semantic colours — slightly richer in light */
+  --green:#0f7a3c;--green-bg:#eaf7f0;
+  --red:#c0392b;--red-bg:#fef0ee;
+  --amber:#8a5800;--amber-bg:#fef5e4;
+  --blue:#1558a8;--blue-light:#eaf1fc;
+  --input-bg:#ffffff;
+  --font:-apple-system,BlinkMacSystemFont,'Segoe UI','Helvetica Neue',Arial,sans-serif;
+  --mono:'SFMono-Regular','Consolas','Liberation Mono','Menlo',monospace;
+  --radius:6px;--radius-lg:10px;
+  /* light-mode specific shadow */
+  --shadow-card:0 1px 3px rgba(0,0,0,0.07),0 0 0 1px rgba(0,0,0,0.06);
+  --shadow-modal:0 8px 40px rgba(0,0,0,0.14);
+}
+/* ── DARK vars ───────────────────────────────────────────── */
+.dark-vars{
+  --bg:#141414;--bg2:#1e1e1e;--bg3:#2a2a2a;
+  --border:rgba(255,255,255,0.10);--border2:rgba(255,255,255,0.22);
+  --text:#e8e8e8;--text2:#aaaaaa;--text3:#666666;
+  --green:#4ade80;--green-bg:rgba(74,222,128,0.12);
+  --red:#f87171;--red-bg:rgba(248,113,113,0.12);
+  --amber:#fbbf24;--amber-bg:rgba(251,191,36,0.12);
+  --blue:#60a5fa;--blue-light:rgba(96,165,250,0.12);
+  --input-bg:#1a1a1a;
+}
+/* applied by JS to <html> element */
+html[data-theme="dark"]{ --bg:#141414;--bg2:#1e1e1e;--bg3:#2a2a2a;
+  --border:rgba(255,255,255,0.10);--border2:rgba(255,255,255,0.22);
+  --text:#e8e8e8;--text2:#aaaaaa;--text3:#666666;
+  --green:#4ade80;--green-bg:rgba(74,222,128,0.12);
+  --red:#f87171;--red-bg:rgba(248,113,113,0.12);
+  --amber:#fbbf24;--amber-bg:rgba(251,191,36,0.12);
+  --blue:#60a5fa;--blue-light:rgba(96,165,250,0.12);
+  --input-bg:#1a1a1a;
+}
+html[data-theme="light"]{
+  --bg:#f8f7f5;--bg2:#ffffff;--bg3:#f0eeec;
+  --border:rgba(0,0,0,0.09);--border2:rgba(0,0,0,0.18);
+  --text:#0f0f0f;--text2:#4a4a4a;--text3:#8a8a8a;
+  --green:#0f7a3c;--green-bg:#eaf7f0;
+  --red:#c0392b;--red-bg:#fef0ee;
+  --amber:#8a5800;--amber-bg:#fef5e4;
+  --blue:#1558a8;--blue-light:#eaf1fc;
+  --input-bg:#ffffff;
+  --shadow-card:0 1px 3px rgba(0,0,0,0.07),0 0 0 1px rgba(0,0,0,0.06);
+  --shadow-modal:0 8px 40px rgba(0,0,0,0.14);
+}
+/* system fallback */
+@media(prefers-color-scheme:dark){
+  html:not([data-theme="light"]){ --bg:#141414;--bg2:#1e1e1e;--bg3:#2a2a2a;
+    --border:rgba(255,255,255,0.10);--border2:rgba(255,255,255,0.22);
+    --text:#e8e8e8;--text2:#aaaaaa;--text3:#666666;
+    --green:#4ade80;--green-bg:rgba(74,222,128,0.12);
+    --red:#f87171;--red-bg:rgba(248,113,113,0.12);
+    --amber:#fbbf24;--amber-bg:rgba(251,191,36,0.12);
+    --blue:#60a5fa;--blue-light:rgba(96,165,250,0.12);
+    --input-bg:#1a1a1a;
+  }
+}
+
+html,body{
+  height:100%;
+  font-family:var(--font);
+  background:var(--bg);
+  color:var(--text);
+  font-size:14px;
+  line-height:1.5;
+  -webkit-font-smoothing:antialiased;
+}
+
+/* ── TOPBAR ─────────────────────────────────────────────── */
+.topbar{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 20px;height:46px;
+  border-bottom:1px solid var(--border);
+  background:var(--bg);
+  position:sticky;top:0;z-index:50;
+}
+.logo{font-size:14px;font-weight:600;color:var(--text);letter-spacing:-0.2px}
+.logo span{color:var(--blue)}
+.save-state{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text3)}
+.save-dot{width:6px;height:6px;border-radius:50%;background:var(--green);flex-shrink:0;transition:background .3s}
+.save-dot.saving{background:var(--amber)}
+.btn-reset{
+  font-size:11px;color:var(--text3);background:none;
+  border:1px solid var(--border2);border-radius:var(--radius);
+  padding:4px 10px;cursor:pointer;font-family:var(--font);
+  transition:all .15s;
+}
+.btn-reset:hover{color:var(--text);border-color:var(--text3)}
+
+/* ── APP LAYOUT ─────────────────────────────────────────── */
+.app{
+  display:grid;
+  grid-template-columns:290px 1fr;
+  height:calc(100vh - 46px);
+  overflow:hidden;
+}
+
+/* ── LEFT PANEL ─────────────────────────────────────────── */
+.left{
+  border-right:1px solid var(--border);
+  overflow-y:auto;
+  padding:16px 16px 24px;
+  background:var(--bg2);
+  display:flex;
+  flex-direction:column;
+}
+.group-label{
+  display:flex;align-items:center;gap:7px;
+  font-size:10px;font-weight:700;
+  text-transform:uppercase;letter-spacing:0.09em;
+  color:var(--text3);
+  margin:20px 0 10px;
+  padding-bottom:7px;
+  border-bottom:1px solid var(--border);
+}
+.group-label:first-child{margin-top:0}
+.group-label svg{flex-shrink:0}
+.field{margin-bottom:10px}
+.field label{
+  display:block;font-size:11px;
+  color:var(--text2);margin-bottom:4px;
+}
+.input-wrap{position:relative;display:flex;align-items:center}
+.input-icon{
+  position:absolute;left:9px;
+  display:flex;align-items:center;justify-content:center;
+  pointer-events:none;
+  color:var(--text3);
+  width:14px;height:14px;
+}
+.input-wrap input,.input-wrap select{
+  width:100%;font-size:13px;
+  padding:7px 10px 7px 30px;
+  background:var(--input-bg);
+  border:1px solid var(--border2);
+  border-radius:var(--radius);
+  color:var(--text);
+  font-family:var(--mono);
+  outline:none;
+  transition:border-color .15s;
+  -webkit-appearance:none;appearance:none;
+}
+.input-wrap select{font-family:var(--font);padding-right:26px}
+.input-wrap input:focus,.input-wrap select:focus{border-color:var(--blue)}
+.sel-arrow{
+  position:absolute;right:8px;
+  pointer-events:none;color:var(--text3);
+  display:flex;align-items:center;
+}
+.field .hint{font-size:11px;color:var(--text3);margin-top:3px;padding-left:1px}
+/* bare field inputs in tab panels (no .input-wrap) */
+.field>input,.field>select{
+  width:100%;font-size:13px;
+  padding:7px 10px;
+  background:var(--input-bg);
+  border:1px solid var(--border2);
+  border-radius:var(--radius);
+  color:var(--text);
+  font-family:var(--mono);
+  outline:none;
+  transition:border-color .15s;
+  -webkit-appearance:none;appearance:none;
+}
+.field>select{font-family:var(--font);padding-right:10px}
+.field>input:focus,.field>select:focus{border-color:var(--blue)}
+
+/* ── RIGHT PANEL ─────────────────────────────────────────── */
+.right{overflow-y:auto;background:var(--bg)}
+.right-inner{padding:20px}
+
+/* ── TABS ─────────────────────────────────────────────────── */
+.tabs{
+  display:flex;gap:0;
+  border-bottom:1px solid var(--border);
+  margin-bottom:20px;
+}
+.tab{
+  display:flex;align-items:center;gap:6px;
+  padding:9px 16px;
+  font-size:12px;font-weight:500;
+  color:var(--text3);
+  background:none;border:none;
+  border-bottom:2px solid transparent;
+  margin-bottom:-1px;
+  cursor:pointer;
+  font-family:var(--font);
+  transition:color .15s;
+}
+.tab:hover{color:var(--text2)}
+.tab.active{color:var(--text);border-bottom-color:var(--text)}
+.tab svg{flex-shrink:0;transition:color .15s}
+.panel{display:none}
+.panel.active{display:block}
+
+/* ── KPI GRID ─────────────────────────────────────────────── */
+.kpi-grid{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:10px;
+  margin-bottom:16px;
+}
+.kpi{
+  background:var(--bg2);
+  border:1px solid var(--border);
+  border-radius:var(--radius-lg);
+  padding:14px 16px;
+}
+.kpi-label{font-size:11px;color:var(--text3);margin-bottom:5px}
+.kpi-value{
+  font-size:22px;font-weight:600;
+  color:var(--text);
+  font-family:var(--mono);
+  letter-spacing:-0.5px;line-height:1.1;
+}
+.kpi-value.pos{color:var(--green)}
+.kpi-value.neg{color:var(--red)}
+.kpi-value.warn{color:var(--amber)}
+.kpi-sub{font-size:11px;color:var(--text3);margin-top:3px}
+
+/* ── CMHC WARNING ─────────────────────────────────────────── */
+.cmhc-warn{
+  display:none;align-items:flex-start;gap:10px;
+  background:var(--amber-bg);
+  border:1px solid var(--amber);
+  border-radius:var(--radius);
+  padding:10px 14px;
+  font-size:12px;color:var(--amber);
+  margin-bottom:14px;
+}
+.cmhc-warn i{margin-top:1px;flex-shrink:0;font-size:15px}
+
+/* ── DASHBOARD GRID ──────────────────────────────────────── */
+.dash-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+
+/* ── CARDS ─────────────────────────────────────────────────── */
+.card{
+  background:var(--bg2);
+  border:1px solid var(--border);
+  border-radius:var(--radius-lg);
+  padding:16px;
+}
+.card-title{
+  font-size:10px;font-weight:700;
+  text-transform:uppercase;letter-spacing:0.09em;
+  color:var(--text3);
+  margin-bottom:12px;
+  padding-bottom:8px;
+  border-bottom:1px solid var(--border);
+}
+
+/* ── CF ROWS ─────────────────────────────────────────────── */
+.cf-row{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:5px 0;
+  border-bottom:1px solid var(--border);
+  font-size:13px;
+}
+.cf-row:last-child{border-bottom:none}
+.cf-row.total{
+  font-weight:600;padding:8px 0 4px;
+  border-top:1px solid var(--border2);
+  border-bottom:none;margin-top:2px;
+}
+.cf-lbl{color:var(--text2)}
+.cf-lbl.indent{padding-left:14px;color:var(--text3);font-size:12px}
+.cf-val{font-family:var(--mono);font-size:13px;color:var(--text)}
+.cf-val.pos{color:var(--green)}
+.cf-val.neg{color:var(--red)}
+.cf-val.warn{color:var(--amber)}
+
+/* ── RATIO BARS ──────────────────────────────────────────── */
+.bar-row{margin-bottom:12px}
+.bar-row:last-child{margin-bottom:0}
+.bar-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:5px}
+.bar-name{font-size:12px;color:var(--text2)}
+.bar-right{display:flex;align-items:center;gap:6px}
+.bar-pct{font-size:12px;font-family:var(--mono);color:var(--text)}
+.bar-track{height:4px;background:var(--bg3);border-radius:2px;overflow:hidden}
+.bar-fill{height:100%;border-radius:2px;transition:width .4s ease,background .4s}
+.badge{
+  display:inline-flex;align-items:center;
+  padding:1px 7px;border-radius:20px;
+  font-size:10px;font-weight:700;font-family:var(--font);
+}
+.badge.pass{background:var(--green-bg);color:var(--green)}
+.badge.fail{background:var(--red-bg);color:var(--red)}
+.stress-divider{
+  font-size:10px;font-weight:700;
+  text-transform:uppercase;letter-spacing:0.09em;
+  color:var(--text3);
+  margin:12px 0 10px;
+  padding-top:12px;
+  border-top:1px solid var(--border);
+}
+
+/* ── AMORT MINI TABLE ────────────────────────────────────── */
+.amort-row{
+  display:grid;grid-template-columns:30px 1fr 68px 72px;
+  gap:6px;align-items:center;
+  padding:4px 0;border-bottom:1px solid var(--border);
+  font-size:12px;
+}
+.amort-row:last-child{border-bottom:none}
+.amort-yr{color:var(--text3);text-align:center;font-family:var(--mono);font-size:11px}
+.amort-bar-wrap{height:3px;background:var(--bg3);border-radius:2px;overflow:hidden}
+.amort-bar-fill{height:100%;background:var(--green);border-radius:2px}
+.amort-eq{color:var(--green);text-align:right;font-family:var(--mono)}
+.amort-bal{color:var(--text3);text-align:right;font-family:var(--mono);font-size:11px}
+
+/* ── DETAIL ROWS (tabs) ──────────────────────────────────── */
+.detail-row{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:6px 0;border-bottom:1px solid var(--border);
+  font-size:13px;
+}
+.detail-row:last-child{border-bottom:none}
+.detail-row.total{
+  font-weight:600;padding:9px 0 5px;
+  border-top:1px solid var(--border2);
+  border-bottom:none;margin-top:2px;
+}
+.detail-lbl{color:var(--text2)}
+.detail-lbl.indent{padding-left:14px;color:var(--text3);font-size:12px}
+.detail-val{font-family:var(--mono);color:var(--text)}
+.detail-val.pos{color:var(--green)}
+.detail-val.neg{color:var(--red)}
+.detail-val.warn{color:var(--amber)}
+
+/* ── EXPENSE LIST ────────────────────────────────────────── */
+.exp-row{
+  display:grid;grid-template-columns:1fr 110px 30px;
+  gap:6px;align-items:center;margin-bottom:6px;
+}
+.exp-row input{
+  font-size:12px;padding:5px 8px;
+  background:var(--input-bg);
+  border:1px solid var(--border2);
+  border-radius:var(--radius);
+  color:var(--text);font-family:var(--font);
+  outline:none;
+}
+.exp-row input:focus{border-color:var(--blue)}
+.exp-row input.amt{font-family:var(--mono);text-align:right}
+.btn-rm{
+  background:none;border:1px solid var(--border);
+  border-radius:var(--radius);
+  color:var(--text3);cursor:pointer;
+  width:30px;height:30px;
+  font-size:14px;
+  display:flex;align-items:center;justify-content:center;
+  transition:all .15s;
+}
+.btn-rm:hover{border-color:var(--red);color:var(--red)}
+.btn-add{
+  display:flex;align-items:center;gap:6px;
+  width:100%;padding:7px 10px;
+  background:none;
+  border:1px dashed var(--border2);
+  border-radius:var(--radius);
+  color:var(--text3);cursor:pointer;
+  font-size:12px;font-family:var(--font);
+  margin-top:6px;transition:all .15s;
+}
+.btn-add:hover{border-color:var(--blue);color:var(--blue)}
+
+/* ── DIVIDER ─────────────────────────────────────────────── */
+.divider{height:1px;background:var(--border);margin:14px 0}
+
+/* ── TWO COL ─────────────────────────────────────────────── */
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+
+/* ── LTT NOTE ─────────────────────────────────────────────── */
+.ltt-note{
+  font-size:11px;color:var(--text3);
+  margin-top:8px;padding-top:8px;
+  border-top:1px solid var(--border);
+}
+
+/* ── SCROLLBAR ───────────────────────────────────────────── */
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+
+/* ── INFO TOOLTIP ────────────────────────────────────────── */
+.card-title{
+  display:flex;align-items:center;justify-content:space-between;gap:6px;
+}
+.card-title-text{flex:1;min-width:0}
+.income-person-header{justify-content:space-between!important}
+
+.tip-anchor{
+  display:inline-flex;align-items:center;
+  margin-left:auto;flex-shrink:0;
+}
+.info-btn,.kpi-info{
+  display:inline-flex;align-items:center;justify-content:center;
+  background:none;border:none;cursor:pointer;padding:2px;
+  color:var(--text3);border-radius:50%;
+  transition:color .15s;flex-shrink:0;
+}
+.info-btn:hover,.kpi-info:hover{color:var(--blue)}
+.info-btn:focus-visible,.kpi-info:focus-visible{
+  outline:2px solid var(--blue);outline-offset:2px;
+}
+
+/* Global tooltip — single element on body, always on top */
+#global-tip{
+  display:none;
+  position:fixed;
+  z-index:99999;
+  width:220px;
+  background:var(--bg);
+  border:1px solid var(--border2);
+  border-radius:var(--radius);
+  padding:10px 12px;
+  font-size:12px;
+  color:var(--text2);
+  line-height:1.5;
+  box-shadow:0 4px 20px rgba(0,0,0,0.20);
+  font-weight:400;
+  text-transform:none;
+  letter-spacing:0;
+  white-space:normal;
+  pointer-events:none;
+}
+#global-tip.visible{display:block}
+#global-tip strong{color:var(--text);font-weight:600;display:block;margin-bottom:4px}
+#global-tip .term{color:var(--text);font-weight:600}
+
+/* KPI label layout */
+.kpi{position:relative}
+.kpi-label{display:flex;align-items:center;gap:4px}
+.kpi-label>span:first-child{flex:1;min-width:0}
+.kpi-info{margin-left:0;flex-shrink:0}
+
+
+/* ── MOBILE / RESPONSIVE ─────────────────────────────────── */
+@media(max-width:768px){
+  html,body{height:auto;overflow:auto}
+  .topbar{padding:0 14px;height:44px}
+  .logo{font-size:13px}
+
+  /* stack layout vertically */
+  .app{
+    display:flex;flex-direction:column;
+    height:auto;overflow:visible;
+  }
+  .left{
+    border-right:none;
+    border-bottom:1px solid var(--border);
+    padding:14px;
+    overflow:visible;
+  }
+  .right{overflow:visible}
+  .right-inner{padding:14px}
+
+  /* side-by-side input groups on mobile */
+  .mobile-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+
+  /* tabs scroll horizontally */
+  .tabs{overflow-x:auto;-webkit-overflow-scrolling:touch;flex-shrink:0}
+  .tab{padding:9px 12px;white-space:nowrap;font-size:11px}
+
+  /* KPI 2 col on mobile */
+  .kpi-grid{grid-template-columns:repeat(2,1fr)}
+  .kpi-value{font-size:18px}
+
+  /* dashboard stacks */
+  .dash-grid{grid-template-columns:1fr}
+
+  /* tab content stacks */
+  .two-col{grid-template-columns:1fr}
+}
+@media(max-width:480px){
+  .kpi-grid{grid-template-columns:repeat(2,1fr)}
+  .kpi-value{font-size:16px}
+  .kpi{padding:10px 12px}
+  .mobile-row{grid-template-columns:1fr}
+}
+
+
+/* ── EXP ROW WITH ICON ───────────────────────────────────── */
+.exp-row{
+  display:grid;grid-template-columns:20px 1fr 100px 30px;
+  gap:6px;align-items:center;margin-bottom:6px;
+}
+.exp-icon{
+  display:flex;align-items:center;justify-content:center;
+  color:var(--text3);flex-shrink:0;width:20px;height:20px;
+}
+.exp-row input{
+  font-size:12px;padding:5px 8px;
+  background:var(--input-bg);
+  border:1px solid var(--border2);
+  border-radius:var(--radius);
+  color:var(--text);font-family:var(--font);
+  outline:none;
+}
+.exp-row input:focus{border-color:var(--blue)}
+.exp-row input.amt{font-family:var(--mono);text-align:right}
+
+/* ── MORTGAGE SCHEDULE TABLE ─────────────────────────────── */
+.sched-wrap{overflow-x:auto;margin-top:4px}
+.sched-table{width:100%;border-collapse:collapse;font-size:12px;min-width:520px}
+.sched-table th{
+  text-align:right;padding:7px 10px;
+  font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;
+  color:var(--text3);border-bottom:1px solid var(--border2);
+  background:var(--bg2);white-space:nowrap;
+}
+.sched-table th:first-child{text-align:center}
+.sched-table td{
+  padding:6px 10px;text-align:right;
+  border-bottom:1px solid var(--border);
+  font-family:var(--mono);color:var(--text2);font-size:12px;
+}
+.sched-table td:first-child{text-align:center;color:var(--text3);font-size:11px}
+.sched-table tr:hover td{background:var(--bg3)}
+.sched-table .final-yr td{color:var(--green);font-weight:600}
+.sched-table .mid-yr td{color:var(--text)}
+
+/* split donut / bar */
+.split-bars{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
+.split-bar-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:14px}
+.split-bar-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:10px}
+.split-bar-row{display:flex;align-items:center;gap:8px;margin-bottom:7px;font-size:12px}
+.split-bar-label{color:var(--text2);flex:1}
+.split-bar-amt{font-family:var(--mono);color:var(--text);min-width:80px;text-align:right}
+.split-bar-track{height:6px;background:var(--bg3);border-radius:3px;overflow:hidden;flex:1;min-width:60px}
+.split-bar-fill{height:100%;border-radius:3px;transition:width .4s}
+.split-bar-fill.principal{background:var(--green)}
+.split-bar-fill.interest{background:var(--amber)}
+.split-bar-fill.equity{background:var(--blue)}
+
+.mtg-stat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px}
+.mtg-stat{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:12px 14px}
+.mtg-stat-label{font-size:10px;color:var(--text3);margin-bottom:4px}
+.mtg-stat-value{font-size:17px;font-weight:600;font-family:var(--mono);color:var(--text);letter-spacing:-.3px}
+.mtg-stat-value.pos{color:var(--green)}
+.mtg-stat-value.neg{color:var(--red)}
+.mtg-stat-value.warn{color:var(--amber)}
+
+.section-head{
+  font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.09em;
+  color:var(--text3);padding:14px 0 8px;border-bottom:1px solid var(--border);
+  margin-bottom:12px;display:flex;align-items:center;gap:8px;
+}
+
+@media(max-width:768px){
+  .split-bars{grid-template-columns:1fr}
+  .mtg-stat-grid{grid-template-columns:repeat(2,1fr)}
+}
+
+
+/* ── TOPBAR RIGHT ────────────────────────────────────────── */
+.topbar-right{display:flex;align-items:center;gap:10px}
+.btn-icon{
+  display:flex;align-items:center;justify-content:center;
+  width:32px;height:32px;
+  background:none;border:1px solid var(--border2);
+  border-radius:var(--radius);cursor:pointer;
+  color:var(--text3);transition:all .15s;
+}
+.btn-icon:hover{color:var(--text);border-color:var(--text3)}
+.btn-icon.active{color:var(--blue);border-color:var(--blue)}
+
+/* ── SETTINGS MODAL ──────────────────────────────────────── */
+.modal-overlay{
+  display:none;position:fixed;inset:0;z-index:500;
+  background:rgba(0,0,0,0.5);
+  align-items:flex-start;justify-content:center;
+  padding-top:5vh;
+}
+.modal-overlay.open{display:flex}
+.modal{
+  background:var(--bg);
+  border:1px solid var(--border2);
+  border-radius:var(--radius-lg);
+  width:min(600px,96vw);
+  max-height:90vh;
+  display:flex;flex-direction:column;
+  box-shadow:0 12px 48px rgba(0,0,0,0.24);
+  overflow:hidden;
+}
+/* header */
+.modal-header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:16px 20px 0;flex-shrink:0;
+}
+.modal-title{font-size:15px;font-weight:600;color:var(--text)}
+.modal-subtitle{font-size:12px;color:var(--text3);margin-top:2px}
+.btn-close{
+  display:flex;align-items:center;justify-content:center;
+  width:30px;height:30px;background:none;border:none;
+  cursor:pointer;color:var(--text3);border-radius:50%;
+  transition:color .15s;flex-shrink:0;
+}
+.btn-close:hover{color:var(--text)}
+/* inner tab nav */
+.modal-tabs{
+  display:flex;gap:0;border-bottom:1px solid var(--border);
+  padding:0 20px;margin-top:14px;flex-shrink:0;
+}
+.modal-tab{
+  display:flex;align-items:center;gap:5px;
+  padding:8px 14px;font-size:12px;font-weight:500;
+  color:var(--text3);background:none;border:none;
+  border-bottom:2px solid transparent;margin-bottom:-1px;
+  cursor:pointer;font-family:var(--font);transition:color .15s;
+  white-space:nowrap;
+}
+.modal-tab:hover{color:var(--text2)}
+.modal-tab.active{color:var(--text);border-bottom-color:var(--blue)}
+.modal-tab svg{flex-shrink:0}
+/* tab panels */
+.modal-body{padding:20px;overflow-y:auto;flex:1}
+.modal-panel{display:none}
+.modal-panel.active{display:block}
+/* override rows — the main pattern */
+.override-row{
+  display:grid;
+  grid-template-columns:1fr auto 140px;
+  gap:12px;align-items:center;
+  padding:10px 0;
+  border-bottom:1px solid var(--border);
+}
+.override-row:last-child{border-bottom:none}
+.override-label{font-size:13px;color:var(--text);font-weight:400}
+.override-desc{font-size:11px;color:var(--text3);margin-top:2px}
+.override-auto{
+  font-size:11px;font-family:var(--mono);
+  color:var(--text3);white-space:nowrap;text-align:right;
+}
+.auto-tag{
+  display:inline-block;font-size:9px;font-weight:700;
+  text-transform:uppercase;letter-spacing:.06em;
+  padding:1px 5px;border-radius:4px;
+  background:var(--bg3);color:var(--text3);
+  margin-right:4px;vertical-align:middle;
+}
+.override-tag{
+  display:inline-block;font-size:9px;font-weight:700;
+  text-transform:uppercase;letter-spacing:.06em;
+  padding:1px 5px;border-radius:4px;
+  background:var(--blue-light);color:var(--blue);
+  margin-right:4px;vertical-align:middle;
+}
+.override-input{width:140px}
+.override-input input,.override-input select{
+  width:100%;font-size:12px;padding:6px 9px;
+  background:var(--input-bg);
+  border:1px solid var(--border2);
+  border-radius:var(--radius);
+  color:var(--text);font-family:var(--mono);
+  outline:none;transition:border-color .15s;
+  -webkit-appearance:none;appearance:none;
+}
+.override-input select{font-family:var(--font)}
+.override-input input:focus,.override-input select:focus{border-color:var(--blue)}
+.override-input input.overridden{border-color:var(--blue)}
+/* section subhead inside panels */
+.panel-section{margin-bottom:4px;margin-top:16px}
+.panel-section:first-child{margin-top:0}
+.panel-section-label{
+  font-size:10px;font-weight:700;text-transform:uppercase;
+  letter-spacing:.09em;color:var(--text3);
+  padding-bottom:6px;margin-bottom:0;
+  display:flex;align-items:center;gap:6px;
+}
+/* footer */
+.modal-footer{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:12px 20px;border-top:1px solid var(--border);
+  flex-shrink:0;
+}
+.modal-footer-left{font-size:11px;color:var(--text3)}
+.modal-footer-left span{color:var(--blue);font-weight:600}
+.btn-apply{
+  font-size:12px;font-weight:600;
+  background:var(--blue);color:#fff;
+  border:none;border-radius:var(--radius);
+  padding:8px 20px;cursor:pointer;font-family:var(--font);
+  transition:opacity .15s;
+}
+.btn-apply:hover{opacity:.88}
+.btn-cancel{
+  font-size:12px;color:var(--text3);
+  background:none;border:1px solid var(--border2);
+  border-radius:var(--radius);padding:8px 14px;
+  cursor:pointer;font-family:var(--font);transition:all .15s;
+}
+.btn-cancel:hover{color:var(--text);border-color:var(--text3)}
+.btn-clear{
+  font-size:11px;color:var(--red);
+  background:none;border:none;padding:4px 0;
+  cursor:pointer;font-family:var(--font);transition:opacity .15s;
+}
+.btn-clear:hover{opacity:.7}
+@media(max-width:560px){
+  .override-row{grid-template-columns:1fr 130px;grid-template-rows:auto auto}
+  .override-auto{grid-column:1;text-align:left}
+  .override-input{width:130px}
+}
+
+
+/* ── COLLAPSIBLE LEFT PANEL ──────────────────────────────── */
+.app{transition:grid-template-columns .22s ease}
+.left{
+  transition:width .22s ease;
+  overflow:hidden;position:relative;
+  display:flex;flex-direction:column;
+}
+.app.left-collapsed{grid-template-columns:48px 1fr}
+.app.left-collapsed .left{width:48px}
+.app.left-collapsed .left-content{display:none}
+/* ── DESKTOP: collapse-btn (top-right chevron when expanded) ── */
+.collapse-btn{
+  display:flex;align-items:center;justify-content:flex-end;
+  padding:8px 10px 4px;
+  background:none;border:none;cursor:pointer;
+  color:var(--text3);transition:color .15s;
+  flex-shrink:0;width:100%;
+}
+.collapse-btn:hover{color:var(--text)}
+.collapse-btn-inner{
+  width:20px;height:20px;
+  border:1px solid var(--border2);border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  background:var(--bg2);transition:background .15s;flex-shrink:0;
+}
+.collapse-btn:hover .collapse-btn-inner{background:var(--bg3)}
+.collapse-btn svg{transition:transform .22s ease;display:block}
+
+/* when collapsed on desktop: hide collapse-btn, show left-icons strip */
+.app.left-collapsed .collapse-btn{display:none}
+.app.left-collapsed .left-icons{display:flex!important}
+
+/* mobile-expand-bar hidden globally, shown only in mobile CSS */
+.mobile-expand-bar{display:none}
+
+/* ── DESKTOP: left-icons (vertical strip when collapsed) ───── */
+.left-icons{
+  display:none;
+  flex-direction:column;align-items:center;justify-content:center;
+  gap:16px;padding:16px 0;
+  cursor:pointer;
+}
+.left-icons:hover .left-icon-ind:not(.filled){color:var(--text2)}
+
+/* ── INDICATOR SPANS (shared desktop + mobile) ──────────────── */
+.left-icon-ind{
+  display:flex;align-items:center;justify-content:center;
+  width:28px;height:28px;
+  color:var(--text3);transition:color .2s;
+  pointer-events:none;flex-shrink:0;
+}
+.left-icon-ind.filled{color:var(--green)}
+
+/* chevron in left-icons — rotates when expanded */
+.left-icon-chevron{
+  display:flex;align-items:center;justify-content:center;
+  width:20px;height:20px;
+  color:var(--text3);transition:transform .22s;
+  pointer-events:none;
+}
+/* on desktop collapsed: chevron points right (→ expand) */
+.app.left-collapsed .left-icon-chevron svg{transform:rotate(0deg)}
+
+/* ── EMPLOYMENT TYPE ─────────────────────────────────────── */
+.emp-type-row{
+  display:flex;gap:0;
+  border:1px solid var(--border2);border-radius:var(--radius);
+  overflow:hidden;margin-bottom:12px;
+}
+.emp-type-btn{
+  flex:1;padding:5px 6px;font-size:11px;font-weight:500;
+  text-align:center;cursor:pointer;
+  background:none;border:none;font-family:var(--font);
+  color:var(--text3);transition:all .15s;
+  border-right:1px solid var(--border2);
+  white-space:nowrap;
+}
+.emp-type-btn:last-child{border-right:none}
+.emp-type-btn.active{
+  background:var(--blue);color:#fff;
+}
+.emp-type-btn:not(.active):hover{background:var(--bg3);color:var(--text)}
+
+/* income card type badge in title */
+.type-badge{
+  display:inline-flex;align-items:center;gap:3px;
+  font-size:9px;font-weight:700;padding:2px 6px;
+  border-radius:10px;text-transform:uppercase;letter-spacing:.05em;
+  margin-left:6px;vertical-align:middle;flex-shrink:0;
+}
+.type-badge.t4{background:var(--blue-light);color:var(--blue)}
+.type-badge.self{background:var(--amber-bg);color:var(--amber)}
+.type-badge.contract{background:var(--green-bg);color:var(--green)}
+.type-badge.none{background:var(--bg3);color:var(--text3)}
+
+/* income card field visibility */
+.inc-t4,.inc-self,.inc-contract,.inc-none{transition:opacity .15s}
+.inc-hidden{display:none}
+
+
+/* ── INCOME SIDE-BY-SIDE LAYOUT ─────────────────────────── */
+.income-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:0;
+  border:1px solid var(--border);
+  border-radius:var(--radius-lg);
+  overflow:hidden;
+  margin-bottom:14px;
+}
+.income-person{
+  padding:16px;
+}
+.income-person:first-child{
+  border-right:1px solid var(--border);
+}
+.income-person-header{
+  display:flex;align-items:center;gap:8px;
+  margin-bottom:12px;padding-bottom:10px;
+  border-bottom:1px solid var(--border);
+}
+.income-person-label{
+  font-size:13px;font-weight:600;color:var(--text);flex:1;
+}
+
+/* Auto-tax row */
+.tax-field-wrap{position:relative}
+.tax-auto-row{
+  display:flex;align-items:center;gap:8px;margin-bottom:4px;
+}
+.tax-auto-value{
+  flex:1;font-size:13px;font-family:var(--mono);
+  color:var(--text2);background:var(--bg3);
+  border:1px solid var(--border);border-radius:var(--radius);
+  padding:6px 10px;
+}
+.tax-auto-badge{
+  font-size:9px;font-weight:700;text-transform:uppercase;
+  letter-spacing:.06em;padding:2px 5px;border-radius:4px;
+  background:var(--bg3);color:var(--text3);white-space:nowrap;
+}
+.tax-override-row{
+  display:flex;align-items:center;gap:6px;
+}
+.tax-override-row label{
+  font-size:11px;color:var(--text3);white-space:nowrap;
+  display:flex;align-items:center;gap:4px;cursor:pointer;
+}
+.tax-override-row input[type=checkbox]{
+  width:13px;height:13px;accent-color:var(--blue);cursor:pointer;
+  flex-shrink:0;
+}
+.tax-override-input{
+  flex:1;font-size:12px;padding:5px 8px;
+  background:var(--input-bg);
+  border:1px solid var(--blue);border-radius:var(--radius);
+  color:var(--text);font-family:var(--mono);
+  outline:none;
+}
+.tax-override-input:disabled{
+  border-color:var(--border);opacity:.4;cursor:not-allowed;
+}
+
+@media(max-width:768px){
+  .income-grid{grid-template-columns:1fr}
+  .income-person:first-child{border-right:none;border-bottom:1px solid var(--border)}
+}
+
+
+/* ── INCOME MINI DASHBOARD ───────────────────────────────── */
+.inc-dash{
+  display:grid;grid-template-columns:repeat(4,1fr);gap:8px;
+  margin-bottom:16px;
+}
+.inc-dash-kpi{
+  background:var(--bg2);border:1px solid var(--border);
+  border-radius:var(--radius);padding:10px 12px;
+}
+.inc-dash-label{font-size:10px;color:var(--text3);margin-bottom:4px}
+.inc-dash-value{font-size:16px;font-weight:600;font-family:var(--mono);
+  color:var(--text);letter-spacing:-.3px;line-height:1.1}
+.inc-dash-value.pos{color:var(--green)}
+.inc-dash-value.neg{color:var(--red)}
+.inc-dash-sub{font-size:10px;color:var(--text3);margin-top:2px}
+@media(max-width:768px){.inc-dash{grid-template-columns:repeat(2,1fr)}}
+
+/* ── SAVINGS GRID (mirrors income-grid) ──────────────────── */
+.savings-grid{
+  display:grid;grid-template-columns:1fr 1fr;gap:0;
+  border:1px solid var(--border);border-radius:var(--radius-lg);
+  overflow:hidden;
+}
+.savings-person{padding:16px}
+.savings-person:first-child{border-right:1px solid var(--border)}
+.savings-person-header{
+  font-size:11px;font-weight:600;color:var(--text2);
+  text-transform:uppercase;letter-spacing:.07em;
+  margin-bottom:12px;padding-bottom:8px;
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:6px;
+}
+.savings-total-row{
+  display:grid;grid-template-columns:1fr 1fr;gap:0;
+  border-top:1px solid var(--border2);margin-top:0;
+}
+.savings-total-cell{
+  padding:10px 16px;
+  border-right:1px solid var(--border);
+}
+.savings-total-cell:last-child{border-right:none}
+.savings-total-label{font-size:11px;color:var(--text3);margin-bottom:2px}
+.savings-total-val{font-size:15px;font-weight:600;font-family:var(--mono);color:var(--green)}
+.savings-grand{
+  padding:10px 16px;border-top:1px solid var(--border2);
+  display:flex;justify-content:space-between;align-items:center;
+}
+.savings-grand-label{font-size:12px;font-weight:600;color:var(--text)}
+.savings-grand-val{font-size:16px;font-weight:600;font-family:var(--mono);color:var(--green)}
+@media(max-width:768px){
+  .savings-grid{grid-template-columns:1fr}
+  .savings-person:first-child{border-right:none;border-bottom:1px solid var(--border)}
+  .savings-total-row{grid-template-columns:1fr}
+  .savings-total-cell{border-right:none;border-bottom:1px solid var(--border)}
+}
+
+
+/* ── EXTRA INCOME STREAMS ────────────────────────────────── */
+.stream-list{display:flex;flex-direction:column;gap:6px;margin-bottom:6px}
+.stream-row{
+  display:grid;grid-template-columns:1fr 110px 30px;
+  gap:6px;align-items:center;
+}
+.stream-row select{
+  font-size:11px;padding:5px 6px;
+  background:var(--input-bg);
+  border:1px solid var(--border2);
+  border-radius:var(--radius);
+  color:var(--text);font-family:var(--font);
+  outline:none;-webkit-appearance:none;appearance:none;
+  cursor:pointer;
+}
+.stream-row select:focus{border-color:var(--blue)}
+.stream-row input[type=number]{
+  font-size:12px;padding:5px 8px;text-align:right;
+  font-family:var(--mono);
+  background:var(--input-bg);
+  border:1px solid var(--border2);
+  border-radius:var(--radius);
+  color:var(--text);outline:none;width:100%;
+}
+.stream-row input:focus{border-color:var(--blue)}
+.btn-add-stream{
+  display:flex;align-items:center;gap:5px;
+  width:100%;padding:6px 10px;
+  background:none;border:1px dashed var(--border2);
+  border-radius:var(--radius);
+  color:var(--text3);cursor:pointer;
+  font-size:11px;font-family:var(--font);
+  margin-top:2px;transition:all .15s;
+}
+.btn-add-stream:hover{border-color:var(--blue);color:var(--blue)}
+.stream-section-label{
+  font-size:10px;font-weight:600;text-transform:uppercase;
+  letter-spacing:.07em;color:var(--text3);
+  margin:10px 0 6px;padding-top:10px;
+  border-top:1px solid var(--border);
+}
+
+
+/* ── $ PREFIX INPUTS ─────────────────────────────────────── */
+.input-wrap.has-prefix .input-icon{
+  font-size:13px;font-weight:500;color:var(--text2);
+  font-family:var(--mono);width:auto;padding-left:2px;
+}
+.input-wrap.has-prefix input{padding-left:26px}
+
+/* ── MOBILE ─────────────────────────────────────────────── */
+@media(max-width:768px){
+  /* disable desktop collapse behaviour */
+  .app.left-collapsed{grid-template-columns:1fr!important}
+  .app.left-collapsed .left{width:auto!important}
+
+  /* stack layout */
+  .app{display:flex;flex-direction:column;height:auto;overflow:visible}
+
+  /* sidebar: sticky, collapsed = horizontal icon bar */
+  .left{
+    border-right:none;padding:0;overflow:hidden;
+    background:var(--bg2);
+    position:sticky;top:44px;z-index:40;
+    box-shadow:0 2px 8px rgba(0,0,0,0.08);
+    transition:max-height .25s ease;
+  }
+
+  /* hide desktop collapse btn on mobile — chevron is inside left-icons instead */
+  .collapse-btn{display:none!important}
+  /* mobile: hide collapse-btn entirely */
+  .collapse-btn{display:none!important}
+
+  /* icon bar: ONLY visible when collapsed */
+  .left-icons{display:none!important}
+  .app.left-collapsed .left-icons{
+    display:flex!important;
+    flex-direction:row!important;
+    align-items:center;justify-content:center;
+    gap:20px;padding:0 16px;
+    height:44px;
+    border-bottom:1px solid var(--border);
+    background:var(--bg2);
+    cursor:pointer;
+  }
+  .left-icon-ind{
+    display:flex;align-items:center;justify-content:center;
+    width:36px;height:36px;
+    pointer-events:none;
+    border:none!important;
+    border-right:none!important;
+  }
+  .left-icon-chevron{
+    display:flex;align-items:center;justify-content:center;
+    width:28px;height:28px;
+    margin-left:auto;flex-shrink:0;
+    border:none!important;border-left:none!important;
+  }
+  .app.left-collapsed .left-icon-chevron svg{transform:rotate(0deg)!important}
+
+  /* when expanded: show a simple tap-to-collapse strip at the top */
+  /* mobile expand bar — only when expanded */
+  .mobile-expand-bar{
+    display:flex!important;align-items:center;justify-content:space-between;
+    padding:10px 16px;
+    border-bottom:1px solid var(--border);
+    cursor:pointer;
+    background:var(--bg2);
+  }
+  .app.left-collapsed .mobile-expand-bar{display:none!important}
+  .mobile-expand-bar-label{
+    font-size:10px;font-weight:700;text-transform:uppercase;
+    letter-spacing:.08em;color:var(--text3);
+  }
+  .mobile-expand-bar-chevron{color:var(--text3)}
+
+  /* left-content: add side padding */
+  .left-content{padding:14px 16px 16px!important}
+
+  /* collapse toggle label — only on mobile expanded */
+    .app.left-collapsed 
+  /* full sidebar content */
+  .left-content{display:flex!important;flex-direction:column;padding:14px 16px 16px}
+  .app.left-collapsed .left-content{display:none!important}
+
+  /* fields side by side */
+  .mobile-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+
+  /* right panel */
+  .right{overflow:visible}
+  .right-inner{padding:14px}
+  .tabs{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .tab{padding:9px 12px;white-space:nowrap;font-size:11px}
+  .kpi-grid{grid-template-columns:repeat(2,1fr)}
+  .kpi-value{font-size:18px}
+  .dash-grid{grid-template-columns:1fr}
+  .two-col{grid-template-columns:1fr}
+  .income-grid{grid-template-columns:1fr}
+  .income-person:first-child{border-right:none;border-bottom:1px solid var(--border)}
+  .stream-row{grid-template-columns:1fr 90px 28px}
+  .tab-dash{grid-template-columns:repeat(2,1fr)}
+  .inc-dash{grid-template-columns:repeat(2,1fr)}
+}
+
+@media(max-width:480px){
+  .mobile-row{grid-template-columns:1fr}
+  .kpi-grid{grid-template-columns:repeat(2,1fr)}
+  .kpi-value{font-size:16px}
+  .kpi{padding:10px 12px}
+}
+
+/* ── TAB MINI DASHBOARDS (property + expenses) ───────────── */
+.tab-dash{
+  display:grid;grid-template-columns:repeat(4,1fr);
+  gap:8px;margin-bottom:16px;
+}
+.tab-dash-kpi{
+  background:var(--bg2);border:1px solid var(--border);
+  border-radius:var(--radius);padding:10px 12px;
+}
+.tab-dash-label{font-size:10px;color:var(--text3);margin-bottom:4px}
+.tab-dash-value{
+  font-size:15px;font-weight:600;font-family:var(--mono);
+  color:var(--text);letter-spacing:-.3px;line-height:1.1;
+}
+.tab-dash-value.pos{color:var(--green)}
+.tab-dash-value.neg{color:var(--red)}
+.tab-dash-value.warn{color:var(--amber)}
+.tab-dash-sub{font-size:10px;color:var(--text3);margin-top:2px}
+@media(max-width:768px){
+  .tab-dash{grid-template-columns:repeat(2,1fr)}
+}
+
+
+/* ── THEME TOGGLE ────────────────────────────────────────── */
+.theme-toggle{
+  display:flex;align-items:center;
+  background:var(--bg3);border:1px solid var(--border2);
+  border-radius:20px;padding:2px;gap:1px;
+}
+.theme-btn{
+  display:flex;align-items:center;justify-content:center;
+  width:26px;height:22px;border-radius:16px;
+  background:none;border:none;cursor:pointer;
+  color:var(--text3);transition:all .15s;font-size:11px;
+}
+.theme-btn:hover{color:var(--text)}
+.theme-btn.active{background:var(--bg);color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+
+
+/* hide settings-action footer when About tab is open */
+.modal-body:has(#mpanel-about.active) ~ .modal-footer .btn-clear,
+.modal-body:has(#mpanel-about.active) ~ .modal-footer .btn-cancel,
+.modal-body:has(#mpanel-about.active) ~ .modal-footer .btn-apply { display:none }
+.modal-body:has(#mpanel-about.active) ~ .modal-footer .modal-footer-left { display:none }
+
+
+/* ── DISCLAIMER MODAL ────────────────────────────────────── */
+#disclaimer-overlay{
+  position:fixed;inset:0;z-index:99998;
+  background:rgba(0,0,0,0.55);
+  display:flex;align-items:flex-end;justify-content:center;
+  padding:0;
+}
+@media(min-width:500px){
+  #disclaimer-overlay{align-items:center;padding:20px}
+}
+#disclaimer-overlay.hidden{display:none}
+#disclaimer-box{
+  background:var(--bg);
+  border:1px solid var(--border2);
+  border-radius:var(--radius-lg) var(--radius-lg) 0 0;
+  width:100%;
+  max-height:90vh;
+  display:flex;flex-direction:column;
+  box-shadow:0 -4px 32px rgba(0,0,0,0.28);
+  overflow:hidden;
+}
+@media(min-width:500px){
+  #disclaimer-box{
+    width:min(440px,96vw);
+    border-radius:var(--radius-lg);
+    box-shadow:0 16px 48px rgba(0,0,0,0.28);
+  }
+}
+.disc-body{padding:16px 20px;font-size:12px;color:var(--text2);line-height:1.7;overflow-y:auto;flex:1}
+.disc-header{
+  display:flex;align-items:center;gap:10px;
+  padding:18px 20px 14px;
+  border-bottom:1px solid var(--border);
+}
+.disc-icon{
+  width:36px;height:36px;border-radius:8px;flex-shrink:0;
+  background:var(--amber-bg);
+  display:flex;align-items:center;justify-content:center;
+}
+.disc-title{font-size:14px;font-weight:700;color:var(--text)}
+.disc-sub{font-size:11px;color:var(--text3);margin-top:2px}
+
+.disc-body strong{color:var(--text)}
+.disc-body ul{margin:10px 0 0 16px;display:flex;flex-direction:column;gap:5px}
+.disc-footer{
+  padding:14px 20px;border-top:1px solid var(--border);
+  display:flex;align-items:center;gap:10px;
+}
+.disc-agree{
+  flex:1;padding:9px 18px;
+  background:var(--blue);color:#fff;
+  border:none;border-radius:var(--radius);
+  font-size:13px;font-weight:600;font-family:var(--font);
+  cursor:pointer;transition:opacity .15s;
+}
+.disc-agree:hover{opacity:.88}
+.disc-note{font-size:10px;color:var(--text3);line-height:1.4}
+
+
+/* ── LIGHT MODE POLISH ───────────────────────────────────── */
+html:not([data-theme="dark"]) .card{
+  box-shadow:var(--shadow-card,none);
+}
+html:not([data-theme="dark"]) .modal{
+  box-shadow:var(--shadow-modal,0 8px 40px rgba(0,0,0,0.22));
+}
+/* stronger topbar separation in light */
+html:not([data-theme="dark"]) .topbar{
+  box-shadow:0 1px 0 var(--border),0 2px 8px rgba(0,0,0,0.05);
+}
+/* left sidebar in light: subtle inner shadow on right edge */
+html:not([data-theme="dark"]) .left{
+  box-shadow:inset -1px 0 0 var(--border);
+}
+/* tabs active indicator stronger in light */
+html:not([data-theme="dark"]) .tab.active{
+  color:var(--blue);
+}
+/* KPI cards: slightly elevated in light */
+html:not([data-theme="dark"]) .kpi{
+  background:var(--bg2);
+  box-shadow:0 1px 2px rgba(0,0,0,0.06);
+}
+/* inputs: clear white wells in light */
+html:not([data-theme="dark"]) .input-wrap input,
+html:not([data-theme="dark"]) .input-wrap select,
+html:not([data-theme="dark"]) .field>input,
+html:not([data-theme="dark"]) .field>select{
+  background:#ffffff;
+  border-color:rgba(0,0,0,0.16);
+  box-shadow:inset 0 1px 2px rgba(0,0,0,0.05);
+}
+html:not([data-theme="dark"]) .input-wrap input:focus,
+html:not([data-theme="dark"]) .input-wrap select:focus,
+html:not([data-theme="dark"]) .field>input:focus,
+html:not([data-theme="dark"]) .field>select:focus{
+  border-color:var(--blue);
+  box-shadow:inset 0 1px 2px rgba(0,0,0,0.04),0 0 0 3px rgba(21,88,168,0.12);
+}
+/* right panel has a very subtle background in light */
+html:not([data-theme="dark"]) .right{
+  background:var(--bg);
+}
+/* income-grid and savings-grid dividers pop more */
+html:not([data-theme="dark"]) .income-person:first-child,
+html:not([data-theme="dark"]) .savings-person:first-child{
+  background:var(--bg2);
+}
+/* bar fills in light mode — slightly richer colours */
+html:not([data-theme="dark"]) .bar-fill{
+  opacity:0.9;
+}
+/* tab dash KPIs: white cards with border */
+html:not([data-theme="dark"]) .tab-dash-kpi,
+html:not([data-theme="dark"]) .inc-dash-kpi{
+  background:#ffffff;
+  box-shadow:0 1px 3px rgba(0,0,0,0.07),0 0 0 1px rgba(0,0,0,0.06);
+}
+/* mtg stat cards */
+html:not([data-theme="dark"]) .mtg-stat{
+  background:#ffffff;
+  box-shadow:0 1px 3px rgba(0,0,0,0.07),0 0 0 1px rgba(0,0,0,0.06);
+}
+
+
+/* ── VALIDATION WARNING ──────────────────────────────────── */
+.field-warn{opacity:.3}
+#dash-warn-banner{
+  display:none;align-items:center;gap:8px;
+  padding:8px 14px;margin-bottom:12px;
+  background:var(--amber-bg);border:1px solid var(--amber);
+  border-radius:var(--radius);font-size:12px;color:var(--amber);
+}
+
+
+  .mobile-section{display:block!important}
+  .mobile-section .group-label{display:flex!important}
+  .mobile-section .mobile-row{display:grid!important}
+  .mobile-section .field{display:block!important}
+}
+
+</style>
+</head>
+<body>
+
+<!-- ── TOP BAR ───────────────────────────────────────────── -->
+<div class="topbar">
+  <div class="logo">Housing <span>Feasibility</span></div>
+  <div class="topbar-right">
+    <div class="save-state">
+      <div class="save-dot" id="saveDot"></div>
+      <span id="saveLabel">Saved</span>
+    </div>
+    <div class="theme-toggle" role="group" aria-label="Color theme">
+      <button class="theme-btn" id="theme-system" onclick="setTheme('system')" title="System default">
+        <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><rect x="1" y="3" width="14" height="10" rx="1.5"/><path d="M5 13v1.5M11 13v1.5M3 14.5h10"/></svg>
+      </button>
+      <button class="theme-btn" id="theme-light" onclick="setTheme('light')" title="Light mode">
+        <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><circle cx="8" cy="8" r="3"/><path d="M8 1v1.5M8 13.5V15M1 8h1.5M13.5 8H15M3.2 3.2l1.1 1.1M11.7 11.7l1.1 1.1M3.2 12.8l1.1-1.1M11.7 4.3l1.1-1.1"/></svg>
+      </button>
+      <button class="theme-btn" id="theme-dark" onclick="setTheme('dark')" title="Dark mode">
+        <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><path d="M12.5 9.5A5.5 5.5 0 0 1 6.5 3.5a5.5 5.5 0 1 0 6 6z"/></svg>
+      </button>
+    </div>
+    <button class="btn-icon" onclick="openSettings()" aria-label="Settings">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true">
+        <path d="M2 4h12M2 8h12M2 12h12"/>
+        <circle cx="5" cy="4" r="1.5" fill="var(--bg)" stroke="currentColor" stroke-width="1.5"/>
+        <circle cx="10" cy="8" r="1.5" fill="var(--bg)" stroke="currentColor" stroke-width="1.5"/>
+        <circle cx="6" cy="12" r="1.5" fill="var(--bg)" stroke="currentColor" stroke-width="1.5"/>
+      </svg>
+    </button>
+    <button class="btn-reset" onclick="resetAll()">Reset</button>
+  </div>
+</div>
+
+<div class="app" id="app">
+
+  <!-- ── LEFT INPUTS ─────────────────────────────────────── -->
+  <div class="left" id="leftPanel">
+    <button class="collapse-btn" onclick="toggleLeft()" aria-label="Toggle sidebar">
+      <span class="collapse-btn-inner">
+        <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6.5 2L3 5l3.5 3"/></svg>
+      </span>
+    </button>
+    <div class="left-icons" onclick="toggleLeft()" role="button" aria-label="Expand sidebar">
+      <span class="left-icon-ind" id="icon-income" title="Income">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="5" width="12" height="9" rx="1.5"/><path d="M5 5V4a3 3 0 0 1 6 0v1"/></svg>
+      </span>
+      <span class="left-icon-ind" id="icon-property" title="Property">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 7L8 2l6 5v7a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V7z"/><path d="M6 14V9h4v5"/></svg>
+      </span>
+      <span class="left-icon-ind" id="icon-mortgage" title="Mortgage">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="8" r="5.5"/><path d="M8 5v3.5L10.5 10"/></svg>
+      </span>
+      <span class="left-icon-chevron">
+        <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 2L7 5l-3.5 3"/></svg>
+      </span>
+    </div>
+    <div class="mobile-expand-bar" onclick="toggleLeft()">
+      <span class="mobile-expand-bar-label">Inputs</span>
+      <span class="mobile-expand-bar-chevron">
+        <svg width="12" height="12" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 7L5 4l3 3"/></svg>
+      </span>
+    </div>
+
+    <div class="left-content">
+
+    <div class="group-label">
+      <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="5" width="12" height="9" rx="1.5"/><path d="M5 5V4a3 3 0 0 1 6 0v1"/></svg>
+      Income
+    </div>
+
+    <div class="mobile-row">
+    <div class="field">
+      <label>Person 1 — annual gross</label>
+      <div class="input-wrap">
+        <span class="input-icon" style="font-size:13px;font-weight:500;color:var(--text3);font-family:var(--mono);width:16px;text-align:center">$</span>
+        <input type="text" id="p1" value="120,000" inputmode="numeric" oninput="syncP1();save();recalc()" onblur="fmtLeftInput(this)" onfocus="stripLeftInput(this)">
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Person 2 — annual gross</label>
+      <div class="input-wrap">
+        <span class="input-icon" style="font-size:13px;font-weight:500;color:var(--text3);font-family:var(--mono);width:16px;text-align:center">$</span>
+        <input type="text" id="p2" value="80,000" inputmode="numeric" oninput="syncP2();save();recalc()" onblur="fmtLeftInput(this)" onfocus="stripLeftInput(this)">
+      </div>
+    </div>
+    </div>
+
+    <div class="group-label">
+      <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 7L8 2l6 5v7a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V7z"/><path d="M6 14V9h4v5"/></svg>
+      Property
+    </div>
+
+    <div class="mobile-row">
+    <div class="field">
+      <label>House price</label>
+      <div class="input-wrap">
+        <span class="input-icon" style="font-size:13px;font-weight:500;color:var(--text3);font-family:var(--mono);width:16px;text-align:center">$</span>
+        <input type="text" id="hp" value="950,000" inputmode="numeric" oninput="save();recalc()" onblur="fmtLeftInput(this)" onfocus="stripLeftInput(this)">
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Down payment</label>
+      <div class="input-wrap">
+        <span class="input-icon" style="font-size:13px;font-weight:500;color:var(--text3);font-family:var(--mono);width:16px;text-align:center">$</span>
+        <input type="text" id="dp" value="190,000" inputmode="numeric" oninput="save();recalc()" onblur="fmtLeftInput(this)" onfocus="stripLeftInput(this)">
+      </div>
+      <div class="hint" id="dpHint">20.0% of price</div>
+    </div>
+    </div>
+
+    <div class="field">
+      <label>Region</label>
+      <div class="input-wrap">
+        <span class="input-icon"><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="7" r="3"/><path d="M8 2C5.2 2 3 4.2 3 7c0 4 5 8 5 8s5-4 5-8c0-2.8-2.2-5-5-5z"/></svg></span>
+        <select id="region" onchange="onRegionChange()">
+          <option value="toronto">Toronto (city)</option>
+          <option value="mississauga">Mississauga / Brampton</option>
+          <option value="vaughan">Vaughan / Markham / Richmond Hill</option>
+          <option value="durham">Durham Region</option>
+          <option value="other">Other GTA</option>
+        </select>
+        <span class="sel-arrow"><svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 3.5L5 6.5L8 3.5"/></svg></span>
+      </div>
+    </div>
+
+
+    <div class="group-label">
+      <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="2" width="12" height="12" rx="1.5"/><path d="M5 6h6M5 8h4M5 10h3"/></svg>
+      Mortgage
+    </div>
+
+    <div class="mobile-row">
+    <div class="field">
+      <label>Interest rate (%)</label>
+      <div class="input-wrap">
+        <span class="input-icon"><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><circle cx="5.5" cy="5.5" r="2"/><circle cx="10.5" cy="10.5" r="2"/><path d="M3.5 12.5l9-9"/></svg></span>
+        <input type="number" id="rate" value="4.99" step="0.01" oninput="save();recalc()">
+      </div>
+      <div class="hint">Stress test: <span id="stRateHint">6.99%</span></div>
+    </div>
+
+    <div class="field">
+      <label>Amortization</label>
+      <div class="input-wrap">
+        <span class="input-icon"><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="8" r="5.5"/><path d="M8 5v3.5L10.5 10"/></svg></span>
+        <select id="amort" onchange="save();recalc()">
+          <option value="20">20 years</option>
+          <option value="25" selected>25 years</option>
+          <option value="30">30 years</option>
+        </select>
+        <span class="sel-arrow"><svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 3.5L5 6.5L8 3.5"/></svg></span>
+      </div>
+    </div>
+    </div>
+
+    </div><!-- /left-content -->
+  </div>
+
+  <!-- ── RIGHT PANEL ─────────────────────────────────────── -->
+  <div class="right">
+    <div class="right-inner">
+
+      <div class="tabs">
+        <button class="tab active" onclick="showTab('dashboard',this)">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="2" width="5" height="5" rx="1"/><rect x="9" y="2" width="5" height="5" rx="1"/><rect x="2" y="9" width="5" height="5" rx="1"/><rect x="9" y="9" width="5" height="5" rx="1"/></svg>
+          Dashboard
+        </button>
+        <button class="tab" onclick="showTab('income',this)">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="5" width="12" height="9" rx="1.5"/><path d="M5 5V4a3 3 0 0 1 6 0v1"/></svg>
+          Income
+        </button>
+        <button class="tab" onclick="showTab('property',this)">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 7L8 2l6 5v7a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V7z"/><path d="M6 14V9h4v5"/></svg>
+          Property
+        </button>
+        <button class="tab" onclick="showTab('expenses',this)">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="2" width="10" height="13" rx="1.5"/><path d="M6 6h4M6 9h4M6 12h2"/></svg>
+          Expenses
+        </button>
+        <button class="tab" onclick="showTab('mortgage',this)">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 13V6.5L8 3l6 3.5V13"/><rect x="5" y="8" width="6" height="5" rx=".5"/><path d="M8 8v5"/></svg>
+          Mortgage
+        </button>
+      </div>
+
+      <!-- ══════════════════════════════════════════════════
+           DASHBOARD
+      ══════════════════════════════════════════════════ -->
+      <div class="panel active" id="panel-dashboard">
+
+        <div id="dash-warn-banner" style="display:none;align-items:center;gap:8px;padding:8px 14px;margin-bottom:12px;background:var(--amber-bg);border:1px solid var(--amber);border-radius:var(--radius);font-size:12px;color:var(--amber)">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><path d="M8 2L1.5 13h13L8 2z"/><path d="M8 7v3M8 11.5v.5"/></svg>
+          <span></span>
+        </div>
+        <div class="kpi-grid">
+          <div class="kpi">
+            <div class="kpi-label"><span>Net monthly surplus</span><span class="tip-anchor" style="margin-left:0"><button class="kpi-info" onclick="toggleTip(this)" aria-label="More information" data-tip="Combined net take-home income minus all monthly expenses. Positive = money left over. Negative = spending more than you earn."><svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="7" cy="7" r="5.5"/><path d="M7 6.5v3.5"/><circle cx="7" cy="4.5" r=".5" fill="currentColor" stroke="none"/></svg></button></span></div>
+            <div class="kpi-value" id="k-surplus">—</div>
+            <div class="kpi-sub" id="k-surplus-sub">—</div>
+          </div>
+          <div class="kpi">
+            <div class="kpi-label"><span>Mortgage payment</span><span class="tip-anchor" style="margin-left:0"><button class="kpi-info" onclick="toggleTip(this)" aria-label="More information" data-tip="Your fixed monthly mortgage payment using Canadian semi-annual compounding. Does not include property tax or insurance (those are listed separately in cash flow)."><svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="7" cy="7" r="5.5"/><path d="M7 6.5v3.5"/><circle cx="7" cy="4.5" r=".5" fill="currentColor" stroke="none"/></svg></button></span></div>
+            <div class="kpi-value" id="k-pmt">—</div>
+            <div class="kpi-sub" id="k-pmt-sub">—</div>
+          </div>
+          <div class="kpi">
+            <div class="kpi-label"><span>One-time to close</span><span class="tip-anchor" style="margin-left:0"><button class="kpi-info" onclick="toggleTip(this)" aria-label="More information" data-tip="Total cash needed at closing on top of your down payment: Land Transfer Tax (LTT), legal fees, home inspection, title insurance, and moving costs. Must be liquid — cannot be borrowed or added to the mortgage."><svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="7" cy="7" r="5.5"/><path d="M7 6.5v3.5"/><circle cx="7" cy="4.5" r=".5" fill="currentColor" stroke="none"/></svg></button></span></div>
+            <div class="kpi-value warn" id="k-close">—</div>
+            <div class="kpi-sub">LTT + legal + moving</div>
+          </div>
+          <div class="kpi">
+            <div class="kpi-label"><span>Total mortgage</span><span class="tip-anchor" style="margin-left:0"><button class="kpi-info" onclick="toggleTip(this)" aria-label="More information" data-tip="Purchase price minus down payment, plus CMHC insurance premium if applicable. This is the amount you'll be paying off over your amortization period."><svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="7" cy="7" r="5.5"/><path d="M7 6.5v3.5"/><circle cx="7" cy="4.5" r=".5" fill="currentColor" stroke="none"/></svg></button></span></div>
+            <div class="kpi-value" id="k-mtg">—</div>
+            <div class="kpi-sub" id="k-mtg-sub">—</div>
+          </div>
+          <div class="kpi">
+            <div class="kpi-label"><span>Net monthly income</span><span class="tip-anchor" style="margin-left:0"><button class="kpi-info" onclick="toggleTip(this)" aria-label="More information" data-tip="Combined after-tax take-home pay for both people. Calculated as gross income × (1 − tax rate) ÷ 12. For Person 2, CPP self-employment contributions (~11.9%) are also deducted before tax."><svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="7" cy="7" r="5.5"/><path d="M7 6.5v3.5"/><circle cx="7" cy="4.5" r=".5" fill="currentColor" stroke="none"/></svg></button></span></div>
+            <div class="kpi-value pos" id="k-income">—</div>
+            <div class="kpi-sub">combined take-home</div>
+          </div>
+          <div class="kpi">
+            <div class="kpi-label"><span>Total monthly expenses</span><span class="tip-anchor" style="margin-left:0"><button class="kpi-info" onclick="toggleTip(this)" aria-label="More information" data-tip="All housing costs (mortgage, tax, insurance, utilities, maintenance) plus all living expenses from the Expenses tab. Subtract this from net income to get your surplus."><svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="7" cy="7" r="5.5"/><path d="M7 6.5v3.5"/><circle cx="7" cy="4.5" r=".5" fill="currentColor" stroke="none"/></svg></button></span></div>
+            <div class="kpi-value" id="k-exp">—</div>
+            <div class="kpi-sub">housing + living</div>
+          </div>
+        </div>
+
+        <div class="cmhc-warn" id="cmhcWarn">
+          <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink:0;margin-top:1px"><path d="M8 2L1.5 13h13L8 2z"/><path d="M8 7v3M8 11.5v.5"/></svg>
+          <span id="cmhcWarnText">CMHC insurance required.</span>
+        </div>
+
+        <div class="dash-grid">
+
+          <div class="card">
+            <div class="card-title"><span class="card-title-text">Monthly cash flow</span><span class="tip-anchor"><button class="info-btn" onclick="toggleTip(this)" aria-label="More information" data-tip="<strong>Monthly cash flow</strong>Your combined net take-home minus all housing and living costs. A positive number means you have money left over each month after all expenses. A negative number (shown in brackets) means expenses exceed income."><svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="7" cy="7" r="5.5"/><path d="M7 6.5v3.5"/><circle cx="7" cy="4.5" r=".5" fill="currentColor" stroke="none"/></svg></button></span></div>
+            <div class="cf-row"><span class="cf-lbl">Net income</span><span class="cf-val pos" id="cf-income">—</span></div>
+            <div class="cf-row"><span class="cf-lbl indent">Mortgage</span><span class="cf-val" id="cf-mtg">—</span></div>
+            <div class="cf-row"><span class="cf-lbl indent">Property tax</span><span class="cf-val" id="cf-ptax">—</span></div>
+            <div class="cf-row"><span class="cf-lbl indent">Home insurance</span><span class="cf-val" id="cf-ins">—</span></div>
+            <div class="cf-row"><span class="cf-lbl indent">Utilities</span><span class="cf-val" id="cf-util">—</span></div>
+            <div class="cf-row"><span class="cf-lbl indent">Maintenance (1% p.a.)</span><span class="cf-val" id="cf-maint">—</span></div>
+            <div class="cf-row"><span class="cf-lbl indent">Living expenses</span><span class="cf-val" id="cf-living">—</span></div>
+            <div class="cf-row total"><span class="cf-lbl">Surplus / (deficit)</span><span class="cf-val" id="cf-surplus">—</span></div>
+          </div>
+
+          <div>
+            <div class="card" style="margin-bottom:14px">
+              <div class="card-title"><span class="card-title-text">Lending ratios</span><span class="tip-anchor"><button class="info-btn" onclick="toggleTip(this)" aria-label="More information" data-tip="&lt;strong&gt;Lending ratios&lt;/strong&gt;&lt;span class=&quot;term&quot;&gt;GDS&lt;/span&gt; (Gross Debt Service) — housing costs ÷ gross income. Must be ≤ 39% to qualify.&lt;br&gt;&lt;br&gt;&lt;span class=&quot;term&quot;&gt;TDS&lt;/span&gt; (Total Debt Service) — all debt payments ÷ gross income. Must be ≤ 44%.&lt;br&gt;&lt;br&gt;&lt;span class=&quot;term&quot;&gt;Stress test (OSFI B-20)&lt;/span&gt; — lenders qualify you at contract rate + 2%, or 5.25%, whichever is higher."><svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="7" cy="7" r="5.5"/><path d="M7 6.5v3.5"/><circle cx="7" cy="4.5" r=".5" fill="currentColor" stroke="none"/></svg></button></span></div>
+              <div class="bar-row">
+                <div class="bar-header">
+                  <span class="bar-name">GDS (max 39%)</span>
+                  <div class="bar-right"><span class="bar-pct" id="gds-pct">—</span><span class="badge" id="gds-badge">—</span></div>
+                </div>
+                <div class="bar-track"><div class="bar-fill" id="gds-bar" style="width:0%"></div></div>
+              </div>
+              <div class="bar-row">
+                <div class="bar-header">
+                  <span class="bar-name">TDS (max 44%)</span>
+                  <div class="bar-right"><span class="bar-pct" id="tds-pct">—</span><span class="badge" id="tds-badge">—</span></div>
+                </div>
+                <div class="bar-track"><div class="bar-fill" id="tds-bar" style="width:0%"></div></div>
+              </div>
+              <div class="stress-divider">Stress test (OSFI B-20)</div>
+              <div class="bar-row">
+                <div class="bar-header">
+                  <span class="bar-name">Stress GDS</span>
+                  <div class="bar-right"><span class="bar-pct" id="st-gds-pct">—</span><span class="badge" id="st-gds-badge">—</span></div>
+                </div>
+                <div class="bar-track"><div class="bar-fill" id="st-gds-bar" style="width:0%"></div></div>
+              </div>
+              <div class="bar-row">
+                <div class="bar-header">
+                  <span class="bar-name">Stress TDS</span>
+                  <div class="bar-right"><span class="bar-pct" id="st-tds-pct">—</span><span class="badge" id="st-tds-badge">—</span></div>
+                </div>
+                <div class="bar-track"><div class="bar-fill" id="st-tds-bar" style="width:0%"></div></div>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-title"><span class="card-title-text">Equity build (annual)</span><span class="tip-anchor"><button class="info-btn" onclick="toggleTip(this)" aria-label="More information" data-tip="&lt;strong&gt;Equity build&lt;/strong&gt;The % of your home you own at each year. At purchase it equals your down payment %. Mortgage payments reduce principal over time, increasing equity."><svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="7" cy="7" r="5.5"/><path d="M7 6.5v3.5"/><circle cx="7" cy="4.5" r=".5" fill="currentColor" stroke="none"/></svg></button></span></div>
+              <div id="amortMini"></div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- ══════════════════════════════════════════════════
+           INCOME TAB
+      ══════════════════════════════════════════════════ -->
+      <div class="panel" id="panel-income">
+
+        <!-- ── MINI DASHBOARD ── -->
+        <div class="inc-dash">
+          <div class="inc-dash-kpi">
+            <div class="inc-dash-label">Person 1 net / month</div>
+            <div class="inc-dash-value pos" id="id-p1net">—</div>
+            <div class="inc-dash-sub" id="id-p1taxlabel">—</div>
+          </div>
+          <div class="inc-dash-kpi">
+            <div class="inc-dash-label">Person 2 net / month</div>
+            <div class="inc-dash-value pos" id="id-p2net">—</div>
+            <div class="inc-dash-sub" id="id-p2taxlabel">—</div>
+          </div>
+          <div class="inc-dash-kpi">
+            <div class="inc-dash-label">Combined net / month</div>
+            <div class="inc-dash-value pos" id="id-combined">—</div>
+            <div class="inc-dash-sub">take-home</div>
+          </div>
+          <div class="inc-dash-kpi">
+            <div class="inc-dash-label">Surplus after housing</div>
+            <div class="inc-dash-value" id="id-surplus">—</div>
+            <div class="inc-dash-sub" id="id-surplus-pct">—</div>
+          </div>
+        </div>
+
+        <div class="income-grid">
+
+          <!-- ── PERSON 1 ── -->
+          <div class="income-person">
+            <div class="income-person-header">
+              <span class="income-person-label">Person 1</span>
+              <span class="type-badge t4" id="p1-type-badge">Employed</span>
+              <span class="tip-anchor"><button class="info-btn" onclick="toggleTip(this)" aria-label="More information" data-tip="<strong>Person 1 income</strong>Choose employment type to see the relevant fields. Tax rate is estimated from Canadian federal + Ontario brackets and updates as you enter income. Tick Override to enter your own rate."><svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="7" cy="7" r="5.5"/><path d="M7 6.5v3.5"/><circle cx="7" cy="4.5" r=".5" fill="currentColor" stroke="none"/></svg></button></span>
+            </div>
+
+            <div class="emp-type-row" style="margin-bottom:14px">
+              <button class="emp-type-btn active" data-person="1" data-type="t4" onclick="setEmpType(1,'t4',this)">Employed</button>
+              <button class="emp-type-btn" data-person="1" data-type="self" onclick="setEmpType(1,'self',this)">Self-emp.</button>
+              <button class="emp-type-btn" data-person="1" data-type="contract" onclick="setEmpType(1,'contract',this)">Contract</button>
+              <button class="emp-type-btn" data-person="1" data-type="none" onclick="setEmpType(1,'none',this)">None</button>
+            </div>
+
+            <div id="p1-t4-fields">
+              <div class="field"><label>Annual salary</label><input type="number" id="p1_salary" oninput="syncP1();syncToSidebar(1);save();recalc()"></div>
+              <div class="field"><label>Bonus / other</label><input type="number" id="p1_bonus" value="0" oninput="syncToSidebar(1);save();recalc()"></div>
+              <div class="field">
+                <label>Union / professional fees (annual)
+                  <span class="tip-anchor"><button class="info-btn" onclick="toggleTip(this)" aria-label="Info" style="margin-left:4px" data-tip="<strong>Union &amp; professional dues</strong>Annual fees paid to a union (e.g. OTF/OSSTF for Ontario teachers), college, or professional association. These are tax-deductible — they reduce your taxable income before the tax rate is applied. Ontario teachers typically pay $800–$1,200/yr combined federation + local dues."><svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="7" cy="7" r="5.5"/><path d="M7 6.5v3.5"/><circle cx="7" cy="4.5" r=".5" fill="currentColor" stroke="none"/></svg></button></span>
+                </label>
+                <input type="number" id="p1_union" value="0" oninput="save();recalc()" placeholder="e.g. 1200">
+              </div>
+                            <div class="field">
+                <label>Effective tax rate
+                  <span class="tip-anchor"><button class="info-btn" onclick="toggleTip(this)" aria-label="Tax info" style="margin-left:4px" data-tip="Auto-calculated from Ontario + federal marginal rates based on gross income. Tick the override checkbox to enter your own rate.<br><br>Brackets (2024): 20.5% up to $57k · 26% to $111k · 33% to $155k · 37% to $221k · 41% above."><svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="7" cy="7" r="5.5"/><path d="M7 6.5v3.5"/><circle cx="7" cy="4.5" r=".5" fill="currentColor" stroke="none"/></svg></button></span>
+                </label>
+                <div class="tax-auto-row">
+                  <div class="tax-auto-value" id="p1_tax_auto">—%</div>
+                  <span class="tax-auto-badge">AUTO</span>
+                </div>
+                <div class="tax-override-row">
+                  <label><input type="checkbox" id="p1_tax_chk" onchange="toggleTaxOverride(1,this)"> Override</label>
+                  <input type="number" class="tax-override-input" id="p1_tax" placeholder="e.g. 35" step="0.5" disabled oninput="save();recalc()">
+                  <span style="font-size:11px;color:var(--text3)">%</span>
+                </div>
+              </div>
+            </div>
+            <div id="p1-self-fields" class="inc-hidden">
+              <div class="field"><label>Gross business revenue</label><input type="number" id="p1_rev" oninput="syncToSidebar(1);save();recalc()"></div>
+              <div class="field"><label>Business expenses</label><input type="number" id="p1_biz" value="0" oninput="save();recalc()"></div>
+                            <div class="field">
+                <label>Effective tax rate
+                  <span class="tip-anchor"><button class="info-btn" onclick="toggleTip(this)" aria-label="Tax info" style="margin-left:4px" data-tip="Auto-calculated from Ontario + federal marginal rates based on gross income. Tick the override checkbox to enter your own rate.<br><br>Brackets (2024): 20.5% up to $57k · 26% to $111k · 33% to $155k · 37% to $221k · 41% above."><svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="7" cy="7" r="5.5"/><path d="M7 6.5v3.5"/><circle cx="7" cy="4.5" r=".5" fill="currentColor" stroke="none"/></svg></button></span>
+                </label>
+                <div class="tax-auto-row">
+                  <div class="tax-auto-value" id="p1_stax_auto">—%</div>
+                  <span class="tax-auto-badge">AUTO</span>
+                </div>
+                <div class="tax-override-row">
+                  <label><input type="checkbox" id="p1_stax_chk" onchange="toggleTaxOverride(1,this)"> Override</label>
+                  <input type="number" class="tax-override-input" id="p1_stax" placeholder="e.g. 35" step="0.5" disabled oninput="save();recalc()">
+                  <span style="font-size:11px;color:var(--text3)">%</span>
+                </div>
+              </div>
+            </div>
+            <div id="p1-contract-fields" class="inc-hidden">
+              <div class="field"><label>Annual contract income</label><input type="number" id="p1_contract" oninput="syncToSidebar(1);save();recalc()"></div>
+                            <div class="field">
+                <label>Effective tax rate
+                  <span class="tip-anchor"><button class="info-btn" onclick="toggleTip(this)" aria-label="Tax info" style="margin-left:4px" data-tip="Auto-calculated from Ontario + federal marginal rates based on gross income. Tick the override checkbox to enter your own rate.<br><br>Brackets (2024): 20.5% up to $57k · 26% to $111k · 33% to $155k · 37% to $221k · 41% above."><svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="7" cy="7" r="5.5"/><path d="M7 6.5v3.5"/><circle cx="7" cy="4.5" r=".5" fill="currentColor" stroke="none"/></svg></button></span>
+                </label>
+                <div class="tax-auto-row">
+                  <div class="tax-auto-value" id="p1_ctax_auto">—%</div>
+                  <span class="tax-auto-badge">AUTO</span>
+                </div>
+                <div class="tax-override-row">
+                  <label><input type="checkbox" id="p1_ctax_chk" onchange="toggleTaxOverride(1,this)"> Override</label>
+                  <input type="number" class="tax-override-input" id="p1_ctax" placeholder="e.g. 35" step="0.5" disabled oninput="save();recalc()">
+                  <span style="font-size:11px;color:var(--text3)">%</span>
+                </div>
+              </div>
+            </div>
+            <div id="p1-none-fields" class="inc-hidden" style="padding:12px 0;font-size:12px;color:var(--text3)">
+              Person 1 excluded from income calculation.
+            </div>
+
+            <div class="divider"></div>
+            <div class="detail-row"><span class="detail-lbl">Gross income</span><span class="detail-val" id="d-p1gross">—</span></div>
+            <div id="p1-self-detail" class="inc-hidden">
+              <div class="detail-row"><span class="detail-lbl indent">Less CPP</span><span class="detail-val" id="d-p1cpp">—</span></div>
+            </div>
+            <div class="detail-row"><span class="detail-lbl">Tax rate applied</span><span class="detail-val" id="d-p1taxrate">—</span></div>
+            <div class="detail-row"><span class="detail-lbl indent">Additional streams</span><span class="detail-val" id="d-p1streams">—</span></div>
+            <div class="detail-row total"><span class="detail-lbl">Net monthly</span><span class="detail-val pos" id="d-p1net">—</span></div>
+
+            <div class="stream-section-label">Additional income streams</div>
+            <div class="stream-list" id="p1-stream-list"></div>
+            <button class="btn-add-stream" onclick="addStream(1)">
+              <svg width="11" height="11" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M6 1v10M1 6h10"/></svg>
+              Add income source
+            </button>
+          </div>
+
+          <!-- ── PERSON 2 ── -->
+          <div class="income-person">
+            <div class="income-person-header">
+              <span class="income-person-label">Person 2</span>
+              <span class="type-badge self" id="p2-type-badge">Self-employed</span>
+              <span class="tip-anchor"><button class="info-btn" onclick="toggleTip(this)" aria-label="More information" data-tip="<strong>Person 2 income</strong>Self-employed: CPP ~11.9% of net income (revenue minus expenses), capped annually. Lenders use a 2-year average of line 15000 from your tax return. Tax rate auto-calculated from brackets."><svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="7" cy="7" r="5.5"/><path d="M7 6.5v3.5"/><circle cx="7" cy="4.5" r=".5" fill="currentColor" stroke="none"/></svg></button></span>
+            </div>
+
+            <div class="emp-type-row" style="margin-bottom:14px">
+              <button class="emp-type-btn" data-person="2" data-type="t4" onclick="setEmpType(2,'t4',this)">Employed</button>
+              <button class="emp-type-btn active" data-person="2" data-type="self" onclick="setEmpType(2,'self',this)">Self-emp.</button>
+              <button class="emp-type-btn" data-person="2" data-type="contract" onclick="setEmpType(2,'contract',this)">Contract</button>
+              <button class="emp-type-btn" data-person="2" data-type="none" onclick="setEmpType(2,'none',this)">None</button>
+            </div>
+
+            <div id="p2-t4-fields" class="inc-hidden">
+              <div class="field"><label>Annual salary</label><input type="number" id="p2_salary" oninput="syncToSidebar(2);save();recalc()"></div>
+              <div class="field"><label>Bonus / other</label><input type="number" id="p2_bonus" value="0" oninput="syncToSidebar(2);save();recalc()"></div>
+              <div class="field">
+                <label>Union / professional fees (annual)
+                  <span class="tip-anchor"><button class="info-btn" onclick="toggleTip(this)" aria-label="Info" style="margin-left:4px" data-tip="<strong>Union &amp; professional dues</strong>Tax-deductible annual dues paid to a union or professional association. Deducted from gross income before tax is calculated. Common for teachers (OTF), nurses (ONA), and trades workers."><svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="7" cy="7" r="5.5"/><path d="M7 6.5v3.5"/><circle cx="7" cy="4.5" r=".5" fill="currentColor" stroke="none"/></svg></button></span>
+                </label>
+                <input type="number" id="p2_union" value="0" oninput="save();recalc()" placeholder="e.g. 1200">
+              </div>
+                            <div class="field">
+                <label>Effective tax rate
+                  <span class="tip-anchor"><button class="info-btn" onclick="toggleTip(this)" aria-label="Tax info" style="margin-left:4px" data-tip="Auto-calculated from Ontario + federal marginal rates based on gross income. Tick the override checkbox to enter your own rate.<br><br>Brackets (2024): 20.5% up to $57k · 26% to $111k · 33% to $155k · 37% to $221k · 41% above."><svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="7" cy="7" r="5.5"/><path d="M7 6.5v3.5"/><circle cx="7" cy="4.5" r=".5" fill="currentColor" stroke="none"/></svg></button></span>
+                </label>
+                <div class="tax-auto-row">
+                  <div class="tax-auto-value" id="p2_t4tax_auto">—%</div>
+                  <span class="tax-auto-badge">AUTO</span>
+                </div>
+                <div class="tax-override-row">
+                  <label><input type="checkbox" id="p2_t4tax_chk" onchange="toggleTaxOverride(2,this)"> Override</label>
+                  <input type="number" class="tax-override-input" id="p2_t4tax" placeholder="e.g. 35" step="0.5" disabled oninput="save();recalc()">
+                  <span style="font-size:11px;color:var(--text3)">%</span>
+                </div>
+              </div>
+            </div>
+            <div id="p2-self-fields">
+              <div class="field"><label>Gross business revenue</label><input type="number" id="p2_rev" oninput="syncP2();syncToSidebar(2);save();recalc()"></div>
+              <div class="field"><label>Business expenses</label><input type="number" id="p2_biz" value="12000" oninput="save();recalc()"></div>
+                            <div class="field">
+                <label>Effective tax rate
+                  <span class="tip-anchor"><button class="info-btn" onclick="toggleTip(this)" aria-label="Tax info" style="margin-left:4px" data-tip="Auto-calculated from Ontario + federal marginal rates based on gross income. Tick the override checkbox to enter your own rate.<br><br>Brackets (2024): 20.5% up to $57k · 26% to $111k · 33% to $155k · 37% to $221k · 41% above."><svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="7" cy="7" r="5.5"/><path d="M7 6.5v3.5"/><circle cx="7" cy="4.5" r=".5" fill="currentColor" stroke="none"/></svg></button></span>
+                </label>
+                <div class="tax-auto-row">
+                  <div class="tax-auto-value" id="p2_tax_auto">—%</div>
+                  <span class="tax-auto-badge">AUTO</span>
+                </div>
+                <div class="tax-override-row">
+                  <label><input type="checkbox" id="p2_tax_chk" onchange="toggleTaxOverride(2,this)"> Override</label>
+                  <input type="number" class="tax-override-input" id="p2_tax" placeholder="e.g. 35" step="0.5" disabled oninput="save();recalc()">
+                  <span style="font-size:11px;color:var(--text3)">%</span>
+                </div>
+              </div>
+            </div>
+            <div id="p2-contract-fields" class="inc-hidden">
+              <div class="field"><label>Annual contract income</label><input type="number" id="p2_contract" oninput="syncToSidebar(2);save();recalc()"></div>
+                            <div class="field">
+                <label>Effective tax rate
+                  <span class="tip-anchor"><button class="info-btn" onclick="toggleTip(this)" aria-label="Tax info" style="margin-left:4px" data-tip="Auto-calculated from Ontario + federal marginal rates based on gross income. Tick the override checkbox to enter your own rate.<br><br>Brackets (2024): 20.5% up to $57k · 26% to $111k · 33% to $155k · 37% to $221k · 41% above."><svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="7" cy="7" r="5.5"/><path d="M7 6.5v3.5"/><circle cx="7" cy="4.5" r=".5" fill="currentColor" stroke="none"/></svg></button></span>
+                </label>
+                <div class="tax-auto-row">
+                  <div class="tax-auto-value" id="p2_ctax_auto">—%</div>
+                  <span class="tax-auto-badge">AUTO</span>
+                </div>
+                <div class="tax-override-row">
+                  <label><input type="checkbox" id="p2_ctax_chk" onchange="toggleTaxOverride(2,this)"> Override</label>
+                  <input type="number" class="tax-override-input" id="p2_ctax" placeholder="e.g. 35" step="0.5" disabled oninput="save();recalc()">
+                  <span style="font-size:11px;color:var(--text3)">%</span>
+                </div>
+              </div>
+            </div>
+            <div id="p2-none-fields" class="inc-hidden" style="padding:12px 0;font-size:12px;color:var(--text3)">
+              Person 2 excluded from income calculation.
+            </div>
+
+            <div class="divider"></div>
+            <div class="detail-row" id="p2-netinc-row"><span class="detail-lbl">Net business income</span><span class="detail-val" id="d-p2netinc">—</span></div>
+            <div id="p2-self-detail">
+              <div class="detail-row"><span class="detail-lbl indent">Less CPP</span><span class="detail-val" id="d-p2cpp">—</span></div>
+            </div>
+            <div class="detail-row"><span class="detail-lbl">Tax rate applied</span><span class="detail-val" id="d-p2taxrate">—</span></div>
+            <div class="detail-row"><span class="detail-lbl indent">Additional streams</span><span class="detail-val" id="d-p2streams">—</span></div>
+            <div class="detail-row total"><span class="detail-lbl">Net monthly</span><span class="detail-val pos" id="d-p2net">—</span></div>
+
+            <div class="stream-section-label">Additional income streams</div>
+            <div class="stream-list" id="p2-stream-list"></div>
+            <button class="btn-add-stream" onclick="addStream(2)" data-tip="<strong>Registered accounts</strong><span class=&quot;term&quot;>RRSP</span> — First-time buyers can withdraw up to $35,000 each under the Home Buyers' Plan (HBP), repayable over 15 years.<br><br><span class=&quot;term&quot;>FHSA</span> — Tax-free contributions up to $8,000/yr ($40,000 lifetime). Withdrawals for a first home purchase need no repayment.<br><br><span class=&quot;term&quot;>TFSA</span> — Tax-free withdrawals, no HBP rules. Use as flexible savings pool.">
+              <svg width="11" height="11" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M6 1v10M1 6h10"/></svg>
+              Add income source
+            </button>
+          </div>
+
+        </div>
+        <div class="divider"></div>
+
+        <!-- ── SAVINGS & INVESTMENTS ── -->
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+          <span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--text3)">Savings &amp; investments</span>
+          <span class="tip-anchor"><button class="info-btn" onclick="toggleTip(this)" aria-label="More information" data-tip="&lt;strong&gt;Registered accounts&lt;/strong&gt;&lt;span class=&quot;term&quot;&gt;RRSP&lt;/span&gt; — First-time buyers can withdraw up to $35,000 each (Home Buyers&#39; Plan), repayable over 15 years.&lt;br&gt;&lt;br&gt;&lt;span class=&quot;term&quot;&gt;FHSA&lt;/span&gt; — Tax-free contributions up to $8,000/yr. Withdrawals for first home are tax-free with no repayment.&lt;br&gt;&lt;br&gt;&lt;span class=&quot;term&quot;&gt;TFSA&lt;/span&gt; — Tax-free withdrawals, flexible savings pool."><svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="7" cy="7" r="5.5"/><path d="M7 6.5v3.5"/><circle cx="7" cy="4.5" r=".5" fill="currentColor" stroke="none"/></svg></button></span>
+        </div>
+
+        <div class="savings-grid">
+          <div class="savings-person">
+            <div class="savings-person-header">
+              <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="5" r="3"/><path d="M2 14c0-3.3 2.7-6 6-6s6 2.7 6 6"/></svg>
+              Person 1
+            </div>
+            <div class="field"><label>RRSP</label><input type="number" id="rrsp1" value="0" oninput="save();recalc()"></div>
+            <div class="field"><label>FHSA</label><input type="number" id="fhsa1" value="0" oninput="save();recalc()"></div>
+            <div class="field"><label>TFSA</label><input type="number" id="tfsa1" value="0" oninput="save();recalc()"></div>
+            <div class="field"><label>Non-registered investments</label><input type="number" id="nonreg1" value="0" oninput="save();recalc()"></div>
+          </div>
+          <div class="savings-person">
+            <div class="savings-person-header">
+              <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="5" r="3"/><path d="M2 14c0-3.3 2.7-6 6-6s6 2.7 6 6"/></svg>
+              Person 2
+            </div>
+            <div class="field"><label>RRSP</label><input type="number" id="rrsp2" value="0" oninput="save();recalc()"></div>
+            <div class="field"><label>FHSA</label><input type="number" id="fhsa2" value="0" oninput="save();recalc()"></div>
+            <div class="field"><label>TFSA</label><input type="number" id="tfsa2" value="0" oninput="save();recalc()"></div>
+            <div class="field"><label>Non-registered investments</label><input type="number" id="nonreg2" value="0" oninput="save();recalc()"></div>
+          </div>
+          <div class="savings-total-row">
+            <div class="savings-total-cell">
+              <div class="savings-total-label">Person 1 total</div>
+              <div class="savings-total-val" id="d-p1savings">—</div>
+            </div>
+            <div class="savings-total-cell">
+              <div class="savings-total-label">Person 2 total</div>
+              <div class="savings-total-val" id="d-p2savings">—</div>
+            </div>
+          </div>
+          <div class="savings-grand" style="grid-column:1/-1">
+            <div>
+              <div class="field" style="margin:0;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+                <label style="font-size:12px;color:var(--text2);white-space:nowrap">Cash / savings</label>
+                <input type="number" id="savings" value="190000" oninput="save();recalc()" style="width:140px;font-size:12px;padding:5px 8px;background:var(--input-bg);border:1px solid var(--border2);border-radius:var(--radius);color:var(--text);font-family:var(--mono);outline:none">
+              </div>
+            </div>
+            <div style="text-align:right">
+              <div style="font-size:10px;color:var(--text3);margin-bottom:2px">Total liquid net worth</div>
+              <div class="savings-grand-val" id="d-networth">—</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══════════════════════════════════════════════════
+           PROPERTY TAB
+      ══════════════════════════════════════════════════ -->
+      <div class="panel" id="panel-property">
+
+        <div class="tab-dash">
+          <div class="tab-dash-kpi">
+            <div class="tab-dash-label">House price</div>
+            <div class="tab-dash-value" id="pd-hp">—</div>
+            <div class="tab-dash-sub" id="pd-dppct">—% down</div>
+          </div>
+          <div class="tab-dash-kpi">
+            <div class="tab-dash-label">Total mortgage</div>
+            <div class="tab-dash-value warn" id="pd-mtg">—</div>
+            <div class="tab-dash-sub" id="pd-cmhc">—</div>
+          </div>
+          <div class="tab-dash-kpi">
+            <div class="tab-dash-label">Monthly payment</div>
+            <div class="tab-dash-value warn" id="pd-pmt">—</div>
+            <div class="tab-dash-sub" id="pd-ptax">+ <span id="pd-ptax-val">—</span>/mo tax</div>
+          </div>
+          <div class="tab-dash-kpi">
+            <div class="tab-dash-label">One-time to close</div>
+            <div class="tab-dash-value" id="pd-close">—</div>
+            <div class="tab-dash-sub">LTT + closing costs</div>
+          </div>
+        </div>
+
+        <div class="two-col">
+          <div class="card">
+            <div class="card-title"><span class="card-title-text">Mortgage breakdown</span><span class="tip-anchor"><button class="info-btn" onclick="toggleTip(this)" aria-label="More information" data-tip="&lt;strong&gt;Mortgage breakdown&lt;/strong&gt;&lt;span class=&quot;term&quot;&gt;CMHC&lt;/span&gt; — Canada Mortgage and Housing Corporation insurance. Required if down payment is below 20%. Premium is added to the mortgage principal and paid over the amortization period.&lt;br&gt;&lt;br&gt;&lt;span class=&quot;term&quot;&gt;Effective monthly rate&lt;/span&gt; — Canadian mortgages use semi-annual compounding, so the true monthly rate is (1 + annual rate ÷ 2)^(1/6) − 1, not simply rate ÷ 12."><svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="7" cy="7" r="5.5"/><path d="M7 6.5v3.5"/><circle cx="7" cy="4.5" r=".5" fill="currentColor" stroke="none"/></svg></button></span></div>
+            <div class="detail-row"><span class="detail-lbl">House price</span><span class="detail-val" id="d-hp">—</span></div>
+            <div class="detail-row"><span class="detail-lbl indent">Down payment</span><span class="detail-val" id="d-dp">—</span></div>
+            <div class="detail-row"><span class="detail-lbl indent">Down payment %</span><span class="detail-val" id="d-dppct">—</span></div>
+            <div class="detail-row"><span class="detail-lbl">Mortgage principal</span><span class="detail-val" id="d-base">—</span></div>
+            <div class="detail-row"><span class="detail-lbl indent">CMHC rate</span><span class="detail-val warn" id="d-cmhcrate">—</span></div>
+            <div class="detail-row"><span class="detail-lbl indent">CMHC premium</span><span class="detail-val warn" id="d-cmhcamt">—</span></div>
+            <div class="detail-row total"><span class="detail-lbl">Total mortgage (incl. CMHC)</span><span class="detail-val" id="d-totalmtg">—</span></div>
+            <div class="divider"></div>
+            <div class="detail-row"><span class="detail-lbl">Effective monthly rate</span><span class="detail-val" id="d-effrate">—</span></div>
+            <div class="detail-row total"><span class="detail-lbl">Monthly payment</span><span class="detail-val warn" id="d-pmt">—</span></div>
+            <div class="detail-row"><span class="detail-lbl">Total interest (lifetime)</span><span class="detail-val neg" id="d-totint">—</span></div>
+            <div class="divider"></div>
+            <div class="detail-row"><span class="detail-lbl">Annual property tax</span><span class="detail-val" id="d-ptax-ann">—</span></div>
+            <div class="detail-row"><span class="detail-lbl indent">Monthly</span><span class="detail-val" id="d-ptax-mo">—</span></div>
+          </div>
+          <div>
+            <div class="card" style="margin-bottom:14px">
+              <div class="card-title"><span class="card-title-text">Land transfer tax</span><span class="tip-anchor"><button class="info-btn" onclick="toggleTip(this)" aria-label="More information" data-tip="&lt;strong&gt;Land Transfer Tax (LTT)&lt;/strong&gt;A one-time provincial tax paid on closing. Toronto buyers pay both Ontario LTT and Toronto Municipal LTT — effectively double.&lt;br&gt;&lt;br&gt;&lt;span class=&quot;term&quot;&gt;First-time buyer rebate&lt;/span&gt; — Ontario rebates up to $4,000 of provincial LTT; Toronto adds a separate rebate up to $4,475."><svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="7" cy="7" r="5.5"/><path d="M7 6.5v3.5"/><circle cx="7" cy="4.5" r=".5" fill="currentColor" stroke="none"/></svg></button></span></div>
+              <div class="detail-row"><span class="detail-lbl">Ontario LTT</span><span class="detail-val" id="d-onltt">—</span></div>
+              <div class="detail-row"><span class="detail-lbl indent">Toronto city LTT</span><span class="detail-val" id="d-torltt">—</span></div>
+              <div class="detail-row"><span class="detail-lbl indent">First-time buyer rebate</span><span class="detail-val pos" id="d-ftbrebate">—</span></div>
+              <div class="detail-row total"><span class="detail-lbl">Net land transfer tax</span><span class="detail-val" id="d-netltt">—</span></div>
+              <div class="divider"></div>
+              <div class="field"><label>First-time buyer?</label>
+                <select id="ftb" onchange="save();recalc()"><option value="yes">Yes</option><option value="no">No</option></select>
+              </div>
+              <div class="ltt-note" id="lttNote">—</div>
+            </div>
+            <div class="card">
+              <div class="card-title"><span class="card-title-text">Closing costs</span><span class="tip-anchor"><button class="info-btn" onclick="toggleTip(this)" aria-label="More information" data-tip="<strong><strong>Closing costs</strong>One-time expenses paid at closing, on top of the down payment and LTT. Budget 1.5–4% of purchase price total for all closing costs. These are not included in your mortgage — you need cash available.<br><br>Estimates shown are typical GTA ranges. Legal fees vary by lawyer; title insurance is a one-time premium that protects against ownership disputes."><svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="7" cy="7" r="5.5"/><path d="M7 6.5v3.5"/><circle cx="7" cy="4.5" r=".5" fill="currentColor" stroke="none"/></svg></button></span></div>
+              <div class="field"><label>Legal fees</label><input type="number" id="cc_legal" value="2000" oninput="save();recalc()"></div>
+              <div class="field"><label>Home inspection</label><input type="number" id="cc_inspect" value="500" oninput="save();recalc()"></div>
+              <div class="field"><label>Title insurance</label><input type="number" id="cc_title" value="300" oninput="save();recalc()"></div>
+              <div class="field"><label>Moving costs</label><input type="number" id="cc_move" value="3000" oninput="save();recalc()"></div>
+              <div class="divider"></div>
+              <div class="detail-row total"><span class="detail-lbl">Total one-time costs</span><span class="detail-val warn" id="d-onetime">—</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══════════════════════════════════════════════════
+           EXPENSES TAB
+      ══════════════════════════════════════════════════ -->
+      <div class="panel" id="panel-expenses">
+
+        <div class="tab-dash">
+          <div class="tab-dash-kpi">
+            <div class="tab-dash-label">Total housing / month</div>
+            <div class="tab-dash-value neg" id="ed-housing">—</div>
+            <div class="tab-dash-sub">mortgage + tax + utils</div>
+          </div>
+          <div class="tab-dash-kpi">
+            <div class="tab-dash-label">Living expenses / month</div>
+            <div class="tab-dash-value" id="ed-living">—</div>
+            <div class="tab-dash-sub" id="ed-living-count">— items</div>
+          </div>
+          <div class="tab-dash-kpi">
+            <div class="tab-dash-label">Total expenses / month</div>
+            <div class="tab-dash-value neg" id="ed-total">—</div>
+            <div class="tab-dash-sub" id="ed-pct">—% of net income</div>
+          </div>
+          <div class="tab-dash-kpi">
+            <div class="tab-dash-label">Surplus / (deficit)</div>
+            <div class="tab-dash-value" id="ed-surplus">—</div>
+            <div class="tab-dash-sub">after all expenses</div>
+          </div>
+        </div>
+
+        <div class="two-col">
+          <div>
+            <div class="card" style="margin-bottom:14px">
+              <div class="card-title"><span class="card-title-text">Housing (auto-calculated)</span><span class="tip-anchor"><button class="info-btn" onclick="toggleTip(this)" aria-label="More information" data-tip="&lt;strong&gt;Auto-calculated housing costs&lt;/strong&gt;These three items pull directly from your mortgage and property inputs and cannot be edited here.&lt;br&gt;&lt;br&gt;&lt;span class=&quot;term&quot;&gt;Maintenance reserve&lt;/span&gt; — Budget 1% of the home's purchase price per year for repairs (roof, appliances, HVAC, plumbing), averaged to a monthly reserve."><svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="7" cy="7" r="5.5"/><path d="M7 6.5v3.5"/><circle cx="7" cy="4.5" r=".5" fill="currentColor" stroke="none"/></svg></button></span></div>
+              <div class="detail-row"><span class="detail-lbl">Mortgage payment</span><span class="detail-val" id="e-mtg">—</span></div>
+              <div class="detail-row"><span class="detail-lbl">Property tax</span><span class="detail-val" id="e-ptax">—</span></div>
+              <div class="detail-row"><span class="detail-lbl">Maintenance reserve</span><span class="detail-val" id="e-maint">—</span></div>
+            </div>
+            <div class="card">
+              <div class="card-title"><span class="card-title-text">Fixed monthly</span><span class="tip-anchor"><button class="info-btn" onclick="toggleTip(this)" aria-label="More information" data-tip="&lt;strong&gt;Fixed monthly expenses&lt;/strong&gt;Pre-filled with regional GTA estimates. Override any value. Utilities vary by house size, heating type, and season."><svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="7" cy="7" r="5.5"/><path d="M7 6.5v3.5"/><circle cx="7" cy="4.5" r=".5" fill="currentColor" stroke="none"/></svg></button></span></div>
+              <div class="field"><label>Home insurance</label><input type="number" id="exp_ins" oninput="save();recalc()"></div>
+              <div class="field"><label>Condo fees (if applicable)</label><input type="number" id="exp_condo" value="0" oninput="save();recalc()"></div>
+              <div class="field"><label>Hydro (electricity)</label><input type="number" id="exp_hydro" oninput="save();recalc()"></div>
+              <div class="field"><label>Gas / heat</label><input type="number" id="exp_gas" oninput="save();recalc()"></div>
+              <div class="field"><label>Water</label><input type="number" id="exp_water" oninput="save();recalc()"></div>
+              <div class="field"><label>Internet / phone</label><input type="number" id="exp_internet" oninput="save();recalc()"></div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-title"><span class="card-title-text">Living expenses</span><span class="tip-anchor"><button class="info-btn" onclick="toggleTip(this)" aria-label="More information" data-tip="<strong>Living expenses</strong>Add, rename, or remove any line. All amounts are monthly. The total feeds directly into the cash flow surplus calculation on the Dashboard. To model debt obligations (car loan, line of credit, student loan), rename one of the rows — the TDS ratio will pick up any row containing the word &quot;debt&quot;."><svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="7" cy="7" r="5.5"/><path d="M7 6.5v3.5"/><circle cx="7" cy="4.5" r=".5" fill="currentColor" stroke="none"/></svg></button></span></div>
+            <div id="expList"></div>
+            <button class="btn-add" onclick="addExp()">
+              <svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M7 2v10M2 7h10"/></svg>
+              Add expense
+            </button>
+            <div class="divider"></div>
+            <div class="detail-row total"><span class="detail-lbl">Total living expenses</span><span class="detail-val" id="e-living-total">—</span></div>
+          </div>
+        </div>
+      </div>
+
+
+      <!-- ══════════════════════════════════════════════════
+           MORTGAGE TAB
+      ══════════════════════════════════════════════════ -->
+      <div class="panel" id="panel-mortgage">
+
+        <div class="mtg-stat-grid">
+          <div class="mtg-stat">
+            <div class="mtg-stat-label">Total mortgage</div>
+            <div class="mtg-stat-value" id="ms-total">—</div>
+          </div>
+          <div class="mtg-stat">
+            <div class="mtg-stat-label">Monthly payment</div>
+            <div class="mtg-stat-value warn" id="ms-pmt">—</div>
+          </div>
+          <div class="mtg-stat">
+            <div class="mtg-stat-label">Total interest paid</div>
+            <div class="mtg-stat-value neg" id="ms-interest">—</div>
+          </div>
+          <div class="mtg-stat">
+            <div class="mtg-stat-label">Interest as % of purchase</div>
+            <div class="mtg-stat-value" id="ms-int-pct">—</div>
+          </div>
+          <div class="mtg-stat">
+            <div class="mtg-stat-label">Break-even year (50% equity)</div>
+            <div class="mtg-stat-value pos" id="ms-breakeven">—</div>
+          </div>
+          <div class="mtg-stat">
+            <div class="mtg-stat-label">Effective monthly rate</div>
+            <div class="mtg-stat-value" id="ms-effrate">—</div>
+          </div>
+        </div>
+
+        <div class="split-bars">
+          <div class="split-bar-card">
+            <div class="split-bar-title">Principal vs interest — first year</div>
+            <div class="split-bar-row">
+              <span class="split-bar-label">Principal paid</span>
+              <div class="split-bar-track"><div class="split-bar-fill principal" id="sb-prin-bar" style="width:0%"></div></div>
+              <span class="split-bar-amt" id="sb-prin-amt">—</span>
+            </div>
+            <div class="split-bar-row">
+              <span class="split-bar-label">Interest paid</span>
+              <div class="split-bar-track"><div class="split-bar-fill interest" id="sb-int-bar" style="width:0%"></div></div>
+              <span class="split-bar-amt" id="sb-int-amt">—</span>
+            </div>
+          </div>
+          <div class="split-bar-card">
+            <div class="split-bar-title">Equity vs balance — mid-point</div>
+            <div class="split-bar-row">
+              <span class="split-bar-label">Equity built</span>
+              <div class="split-bar-track"><div class="split-bar-fill equity" id="sb-eq-bar" style="width:0%"></div></div>
+              <span class="split-bar-amt" id="sb-eq-amt">—</span>
+            </div>
+            <div class="split-bar-row">
+              <span class="split-bar-label">Balance remaining</span>
+              <div class="split-bar-track"><div class="split-bar-fill interest" id="sb-bal-bar" style="width:0%"></div></div>
+              <span class="split-bar-amt" id="sb-bal-amt">—</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="section-head">
+          <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="2" width="12" height="12" rx="1.5"/><path d="M5 6h6M5 9h4M5 12h2"/></svg>
+          Annual amortization schedule
+        </div>
+
+        <div class="sched-wrap">
+          <table class="sched-table">
+            <thead>
+              <tr>
+                <th>Yr</th>
+                <th>Opening balance</th>
+                <th>Annual payment</th>
+                <th>Principal</th>
+                <th>Interest</th>
+                <th>Closing balance</th>
+                <th>Interest %</th>
+                <th>Equity</th>
+              </tr>
+            </thead>
+            <tbody id="schedBody"></tbody>
+          </table>
+        </div>
+
+      </div>
+
+    </div><!-- /right-inner -->
+  </div><!-- /right -->
+
+</div><!-- /app -->
+
+<script>
+// ── Settings state ────────────────────────────────────────────────────────
+let settings = {
+  ptr: null, assessed: null,
+  freq: 12, renewrate: null, prepay: 0, compound: 2,
+  ins: null, hydro: null, gas: null, water: null, internet: null,
+  maint_pct: 0.01, maint_custom: null,
+  p1tax: null, p2tax: null, cpp: 0.1188, cpp_cap: 8068,
+};
+let settingsOverridden = false;
+
+// ── Employment type state ─────────────────────────────────────────────────
+let empType = { 1: 't4', 2: 'self' };
+
+// ── Region presets (property tax rate + utility estimates) ──────────────────
+const PRESETS = {
+  toronto:     {ptr:.0063, ins:220, hydro:155, gas:140, water:65,  internet:160},
+  mississauga: {ptr:.0079, ins:200, hydro:145, gas:130, water:60,  internet:155},
+  vaughan:     {ptr:.0065, ins:195, hydro:140, gas:125, water:55,  internet:155},
+  durham:      {ptr:.0100, ins:185, hydro:135, gas:120, water:55,  internet:150},
+  other:       {ptr:.0070, ins:190, hydro:140, gas:125, water:58,  internet:155},
+};
+
+// ── Default living expenses ────────────────────────────────────────────────
+let expenses = [
+  {n:'Groceries',                     a:800},
+  {n:'Dining out',                    a:400},
+  {n:'Transportation (gas, transit)', a:350},
+  {n:'Car insurance',                 a:200},
+  {n:'Child care / school',           a:0},
+  {n:'Entertainment / subscriptions', a:200},
+  {n:'Clothing / personal care',      a:200},
+  {n:'Health / dental',               a:150},
+  {n:'Travel (monthly avg)',          a:250},
+  {n:'RRSP / TFSA contributions',     a:500},
+  {n:'Debt payments (car, LOC)',      a:0},
+];
+
+// ── Helpers ───────────────────────────────────────────────────────────────
+const $ = id => document.getElementById(id);
+const n = id => { const v = parseFloat(($(id)?.value||'').replace(/,/g,'')); return isNaN(v) ? 0 : v; };
+
+const cad = v => {
+  if (v == null || isNaN(v)) return '—';
+  const abs = Math.abs(Math.round(v));
+  const str = '$' + abs.toLocaleString('en-CA');
+  return v < 0 ? '(' + str + ')' : str;
+};
+const pct = (v, d=1) => isNaN(v) ? '—' : (v * 100).toFixed(d) + '%';
+
+function setV(id, val, cls) {
+  const el = $(id); if (!el) return;
+  el.textContent = val;
+  if (cls !== undefined) {
+    el.classList.remove('pos','neg','warn');
+    if (cls) el.classList.add(cls);
+  }
+}
+
+// ── Tab switching ──────────────────────────────────────────────────────────
+window.showTab = function showTab(name, btn) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
+  $('panel-' + name).classList.add('active');
+  btn.classList.add('active');
+}
+
+// ── Sync left-panel quick inputs → detail tab inputs ──────────────────────
+// ── Bidirectional sidebar ↔ tab sync ─────────────────────────────────────
+// Sidebar → Tab: called when sidebar quick-input changes
+window.syncP1 = function() {
+  const raw = ($('p1').value || '').replace(/,/g,'');
+  const type = empType[1] || 't4';
+  if (type === 't4')      { if ($('p1_salary')) $('p1_salary').value = raw; }
+  else if (type === 'self')    { if ($('p1_rev'))    $('p1_rev').value    = raw; }
+  else if (type === 'contract'){ if ($('p1_contract'))$('p1_contract').value = raw; }
+};
+window.syncP2 = function() {
+  const raw = ($('p2').value || '').replace(/,/g,'');
+  const type = empType[2] || 'self';
+  if (type === 't4')      { if ($('p2_salary')) $('p2_salary').value = raw; }
+  else if (type === 'self')    { if ($('p2_rev'))    $('p2_rev').value    = raw; }
+  else if (type === 'contract'){ if ($('p2_contract'))$('p2_contract').value = raw; }
+};
+
+// Tab → Sidebar: called when a tab income field changes, pushes total back to sidebar
+function syncToSidebar(person) {
+  const type = empType[person] || (person === 1 ? 't4' : 'self');
+  let val = 0;
+  if (type === 't4') {
+    val = parseFloat($('p' + person + '_salary')?.value || 0)
+        + parseFloat($('p' + person + '_bonus')?.value || 0);
+  } else if (type === 'self') {
+    const revId = 'p' + person + '_rev';
+    val = parseFloat($(revId)?.value || 0);
+  } else if (type === 'contract') {
+    val = parseFloat($('p' + person + '_contract')?.value || 0);
+  }
+  const el = $('p' + person);
+  if (el && val > 0) el.value = Math.round(val).toLocaleString('en-CA');
+}
+
+// ── Expense icon pool ─────────────────────────────────────────────────────
+const EXP_ICONS = {
+  grocery:  '<svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 2h1.5l2 7h7l1.5-5H5"/><circle cx="6.5" cy="12.5" r="1"/><circle cx="11.5" cy="12.5" r="1"/></svg>',
+  dining:   '<svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 2v5a3 3 0 0 0 6 0V2"/><path d="M8 10v4"/><path d="M3 2v4M3 2c0 0 0 4 3 4"/></svg>',
+  car:      '<svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 10h12M3 10l1.5-4h5l1.5 4"/><path d="M1 10v2h1.5M13.5 12H15v-2"/><circle cx="4.5" cy="12" r="1"/><circle cx="11.5" cy="12" r="1"/></svg>',
+  transit:  '<svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="2" width="10" height="10" rx="2"/><path d="M3 8h10M6 14l-1-2M10 14l1-2"/><circle cx="5.5" cy="10.5" r=".8" fill="currentColor" stroke="none"/><circle cx="10.5" cy="10.5" r=".8" fill="currentColor" stroke="none"/></svg>',
+  insurance:'<svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2L3 4.5v4C3 11.5 5.5 14 8 15c2.5-1 5-3.5 5-6.5v-4L8 2z"/><path d="M5.5 8l2 2 3-3"/></svg>',
+  health:   '<svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M8 14s-5-3.5-5-7a5 5 0 0 1 5-4 5 5 0 0 1 5 4c0 3.5-5 7-5 7z"/><path d="M6 8h4M8 6v4"/></svg>',
+  child:    '<svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="4.5" r="2.5"/><path d="M4 14c0-2.2 1.8-4 4-4s4 1.8 4 4"/><path d="M5 10.5l1.5 3M11 10.5l-1.5 3"/></svg>',
+  school:   '<svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12V7l6-4 6 4v5"/><path d="M5 12v-3h6v3"/><path d="M8 3v2"/></svg>',
+  pet:      '<svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="8" cy="10" rx="4" ry="3"/><circle cx="4.5" cy="6" r="1.2"/><circle cx="11.5" cy="6" r="1.2"/><circle cx="6.5" cy="4.5" r="1"/><circle cx="9.5" cy="4.5" r="1"/></svg>',
+  debt:     '<svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="12" height="8" rx="1.5"/><path d="M5 5V4a3 3 0 0 1 6 0v1"/><path d="M8 9v2"/><circle cx="8" cy="8.5" r=".5" fill="currentColor" stroke="none"/></svg>',
+  loan:     '<svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><rect x="2" y="4" width="12" height="9" rx="1.5"/><path d="M5 4V3a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v1"/><path d="M8 8.5V11M6.5 9.5h2.5a.5.5 0 0 1 0 1H7a.5.5 0 0 0 0 1h2"/></svg>',
+  travel:   '<svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 13l4-4 3 2 4-6"/><path d="M12 5h2v2"/></svg>',
+  entertain:'<svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="5,3 13,8 5,13"/></svg>',
+  clothing: '<svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 2L2 6l3 1v7h6V7l3-1-3-4"/><path d="M5 2c0 1.7 1.3 3 3 3s3-1.3 3-3"/></svg>',
+  savings:  '<svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8a5 5 0 1 1 10 0c0 1.5-.5 2.8-1.5 3.7L11 14H5l-.5-2.3C3.5 10.8 3 9.5 3 8z"/><path d="M6 14h4M8 4v3l2 1"/></svg>',
+  phone:    '<svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="1" width="8" height="14" rx="2"/><circle cx="8" cy="12" r=".7" fill="currentColor" stroke="none"/></svg>',
+  default:  '<svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="5.5"/><path d="M8 6v4M8 5h.01"/></svg>',
+};
+
+function getExpIcon(name) {
+  const l = name.toLowerCase();
+  if(/grocer|food|supermarket|costco/.test(l))         return EXP_ICONS.grocery;
+  if(/dining|restaurant|eat|lunch|coffee|takeout/.test(l)) return EXP_ICONS.dining;
+  if(/pet|dog|cat|vet|animal/.test(l))                 return EXP_ICONS.pet;
+  if(/baby|infant|daycare|child care|kids|toddler/.test(l)) return EXP_ICONS.child;
+  if(/school|tuition|education|college|university/.test(l)) return EXP_ICONS.school;
+  if(/car loan|auto loan|vehicle loan/.test(l))        return EXP_ICONS.loan;
+  if(/car|auto|vehicle|parking/.test(l))               return EXP_ICONS.car;
+  if(/transit|bus|subway|ttc|uber|taxi/.test(l))       return EXP_ICONS.transit;
+  if(/insurance/.test(l))                              return EXP_ICONS.insurance;
+  if(/health|dental|medical|doctor|pharmacy|vision/.test(l)) return EXP_ICONS.health;
+  if(/debt|loc|line of credit|credit card/.test(l))   return EXP_ICONS.debt;
+  if(/loan|mortgage|borrow/.test(l))                  return EXP_ICONS.loan;
+  if(/travel|vacation|holiday|trip|flight/.test(l))   return EXP_ICONS.travel;
+  if(/entertain|netflix|stream|movie|spotify|sub/.test(l)) return EXP_ICONS.entertain;
+  if(/clothing|clothes|fashion|apparel|shoes/.test(l)) return EXP_ICONS.clothing;
+  if(/rrsp|tfsa|fhsa|saving|invest|rrsp/.test(l))     return EXP_ICONS.savings;
+  if(/phone|internet|wifi|cable|rogers|bell/.test(l)) return EXP_ICONS.phone;
+  if(/transport|gas|fuel/.test(l))                    return EXP_ICONS.transit;
+  return EXP_ICONS.default;
+}
+
+// ── Number formatting helpers ──────────────────────────────────────────────
+function parseAmt(str) {
+  return parseFloat(str.replace(/,/g,'')) || 0;
+}
+function fmtAmt(v) {
+  if (!v && v !== 0) return '';
+  return Math.round(v).toLocaleString('en-CA');
+}
+function fmtInput(el) {
+  const raw = parseAmt(el.value);
+  if (raw > 0) el.value = fmtAmt(raw);
+}
+function parseInput(el) {
+  return parseAmt(el.value);
+}
+
+// ── Dynamic expense list ───────────────────────────────────────────────────
+window.renderExpenses = function renderExpenses() {
+  const list = $('expList'); list.innerHTML = '';
+  expenses.forEach((e, i) => {
+    const row = document.createElement('div');
+    row.className = 'exp-row';
+    const icon = getExpIcon(e.n);
+    const amtFmt = e.a ? fmtAmt(e.a) : '';
+    row.innerHTML =
+      `<span class="exp-icon" aria-hidden="true">${icon}</span>` +
+      `<input type="text" value="${e.n.replace(/"/g,'&quot;')}"
+         oninput="expenses[${i}].n=this.value;renderExpIcon(this);save();recalc()">` +
+      `<input type="text" class="amt" value="${amtFmt}" placeholder="0"
+         oninput="expenses[${i}].a=parseAmt(this.value);save();recalc()"
+         onblur="this.value=expenses[${i}].a?fmtAmt(expenses[${i}].a):''">` +
+      `<button class="btn-rm" aria-label="Remove"
+         onclick="expenses.splice(${i},1);renderExpenses();
+renderStreams(1);
+renderStreams(2);save();recalc()">` +
+      `<svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M2 2l8 8M10 2L2 10"/></svg></button>`;
+    list.appendChild(row);
+  });
+}
+
+window.renderExpIcon = function renderExpIcon(nameInput) {
+  const iconEl = nameInput.closest('.exp-row').querySelector('.exp-icon');
+  if (iconEl) iconEl.innerHTML = getExpIcon(nameInput.value);
+}
+
+window.addExp = function addExp() {
+  expenses.push({n:'New expense', a:0});
+  renderExpenses(); save(); recalc();
+}
+
+// ── Finance math (Canadian semi-annual compounding) ────────────────────────
+const effRate = r => Math.pow(1 + r / 2, 1/6) - 1;
+const pmt     = (r, nper, pv) =>
+  r === 0 ? pv / nper : pv * r / (1 - Math.pow(1 + r, -nper));
+
+function onLTT(p) {
+  if (p <= 55000)   return p * 0.005;
+  if (p <= 250000)  return 275  + (p - 55000)  * 0.01;
+  if (p <= 400000)  return 2225 + (p - 250000) * 0.015;
+  if (p <= 2000000) return 4475 + (p - 400000) * 0.02;
+  return 36475 + (p - 2000000) * 0.025;
+}
+function torLTT(p) {
+  if (p <= 55000)   return p * 0.005;
+  if (p <= 400000)  return 275  + (p - 55000)  * 0.01;
+  if (p <= 2000000) return 3725 + (p - 400000) * 0.02;
+  return 35725 + (p - 2000000) * 0.025;
+}
+function cmhcRate(dpPct) {
+  if (dpPct >= 0.20) return 0;
+  if (dpPct >= 0.15) return 0.028;
+  if (dpPct >= 0.10) return 0.031;
+  return 0.04;
+}
+
+// ── Ratio bar helper ───────────────────────────────────────────────────────
+function setBar(barId, pctId, badgeId, ratio, max) {
+  const w    = Math.min(ratio / max, 1.5) * 100;
+  const pass = ratio <= max;
+  const bar  = $(barId);
+  if (bar) {
+    bar.style.width      = Math.min(w, 100) + '%';
+    bar.style.background = pass ? '#157a45' : '#c0392b';
+  }
+  setV(pctId, pct(ratio));
+  const badge = $(badgeId);
+  if (badge) {
+    badge.textContent = pass ? 'Pass' : 'Fail';
+    badge.className   = 'badge ' + (pass ? 'pass' : 'fail');
+  }
+}
+
+// ── Amortization mini summary ──────────────────────────────────────────────
+function buildAmortMini(principal, er, monthly, amort) {
+  const el = $('amortMini'); el.innerHTML = '';
+  [1,3,5,10,15,20,25,30].filter(y => y <= amort).forEach(yr => {
+    let bal = principal;
+    for (let m = 0; m < yr * 12; m++) {
+      const im = bal * er;
+      const pm = Math.min(monthly - im, bal);
+      bal = Math.max(bal - pm, 0);
+    }
+    const eq  = 1 - bal / principal;
+    const row = document.createElement('div');
+    row.className = 'amort-row';
+    row.innerHTML =
+      `<span class="amort-yr">${yr}</span>` +
+      `<div class="amort-bar-wrap"><div class="amort-bar-fill" style="width:${Math.round(eq*100)}%"></div></div>` +
+      `<span class="amort-eq">${pct(eq)}</span>` +
+      `<span class="amort-bal">${cad(bal)}</span>`;
+    el.appendChild(row);
+  });
+}
+
+// ── Utility preset application ─────────────────────────────────────────────
+let utilTouched = false;
+['exp_ins','exp_hydro','exp_gas','exp_water','exp_internet'].forEach(id => {
+  const el = $(id);
+  if (el) el.addEventListener('input', () => { utilTouched = true; });
+});
+
+window.applyPreset = function applyPreset(region, force) {
+  const p = PRESETS[region];
+  if (force || !utilTouched) {
+    $('exp_ins').value      = p.ins;
+    $('exp_hydro').value    = p.hydro;
+    $('exp_gas').value      = p.gas;
+    $('exp_water').value    = p.water;
+    $('exp_internet').value = p.internet;
+  }
+}
+
+window.onRegionChange = function onRegionChange() {
+  applyPreset($('region').value, !utilTouched);
+  save(); recalc();
+}
+
+// ── Main calculation ───────────────────────────────────────────────────────
+window.recalc = function recalc() {
+  const region = $('region').value;
+  const pr     = PRESETS[region];
+
+  // Income — type-aware with auto tax
+  const p1Type = empType[1] || 't4';
+  let p1Gross = 0, p1Net = 0, p1CPP = 0, p1TaxRate = 0;
+  if (p1Type === 't4') {
+    const p1Union  = n('p1_union');
+    p1Gross        = (n('p1_salary') || n('p1')) + n('p1_bonus');
+    const p1Taxable = Math.max(p1Gross - p1Union, 0);
+    updateTaxDisplay(1, p1Taxable);
+    p1TaxRate  = resolveRate(1, p1Taxable);
+    // union fees are tax-deductible: tax is paid on (gross - union fees)
+    p1Net      = (p1Gross - p1Taxable * p1TaxRate) / 12;
+    p1Net     += calcStreamNet(1, p1TaxRate) / 12;
+  } else if (p1Type === 'self') {
+    const rev  = n('p1_rev') || n('p1');
+    const biz  = n('p1_biz');
+    p1Gross    = rev - biz;
+    p1CPP      = Math.min(p1Gross * settings.cpp, settings.cpp_cap);
+    updateTaxDisplay(1, p1Gross);
+    p1TaxRate  = resolveRate(1, p1Gross);
+    p1Net      = (p1Gross - p1CPP) * (1 - p1TaxRate) / 12;
+    p1Net     += calcStreamNet(1, p1TaxRate) / 12;
+  } else if (p1Type === 'contract') {
+    p1Gross    = n('p1_contract') || n('p1');
+    updateTaxDisplay(1, p1Gross);
+    p1TaxRate  = resolveRate(1, p1Gross);
+    p1Net      = p1Gross * (1 - p1TaxRate) / 12;
+    p1Net     += calcStreamNet(1, p1TaxRate) / 12;
+  }
+
+  const p2Type = empType[2] || 'self';
+  let p2Gross = 0, p2Net = 0, p2CPP = 0, p2NetInc = 0, p2TaxRate = 0;
+  if (p2Type === 't4') {
+    const p2Union  = n('p2_union');
+    p2Gross        = (n('p2_salary') || n('p2')) + n('p2_bonus');
+    const p2Taxable = Math.max(p2Gross - p2Union, 0);
+    updateTaxDisplay(2, p2Taxable);
+    p2TaxRate  = resolveRate(2, p2Taxable);
+    p2Net      = (p2Gross - p2Taxable * p2TaxRate) / 12;
+    p2Net     += calcStreamNet(2, p2TaxRate) / 12;
+    p2NetInc   = p2Gross;
+  } else if (p2Type === 'self') {
+    const rev  = n('p2_rev') || n('p2');
+    const biz  = n('p2_biz');
+    p2NetInc   = rev - biz;
+    p2Gross    = p2NetInc;
+    p2CPP      = Math.min(p2NetInc * settings.cpp, settings.cpp_cap);
+    updateTaxDisplay(2, p2Gross);
+    p2TaxRate  = resolveRate(2, p2Gross);
+    p2Net      = (p2NetInc - p2CPP) * (1 - p2TaxRate) / 12;
+    p2Net     += calcStreamNet(2, p2TaxRate) / 12;
+  } else if (p2Type === 'contract') {
+    p2Gross    = n('p2_contract') || n('p2');
+    p2NetInc   = p2Gross;
+    updateTaxDisplay(2, p2Gross);
+    p2TaxRate  = resolveRate(2, p2Gross);
+    p2Net      = p2Gross * (1 - p2TaxRate) / 12;
+    p2Net     += calcStreamNet(2, p2TaxRate) / 12;
+  }
+
+  const combinedNet  = p1Net + p2Net;
+  const grossMonthly = (p1Gross + (p2NetInc || p2Gross)) / 12;
+
+  // Property
+  const hp     = n('hp');
+  const dp     = n('dp');
+  const dpPct  = hp > 0 ? dp / hp : 0;
+  const rate   = n('rate') / 100;
+  const amort  = parseInt($('amort').value);
+  const ptr    = settings.ptr != null ? settings.ptr : pr.ptr;
+
+  const base     = hp - dp;
+  const cmhcR    = cmhcRate(dpPct);
+  const cmhcAmt  = base * cmhcR;
+  const totalMtg = base + cmhcAmt;
+  const compound = settings.compound || 2;
+  const freq     = settings.freq || 12;
+  const effRateAdj = r => Math.pow(1 + r / compound, compound / freq) - 1;
+  const er       = effRateAdj(rate);
+  const monthly  = pmt(er, amort * freq, totalMtg);
+  const totalInt = monthly * amort * freq - totalMtg;
+
+  const onL    = onLTT(hp);
+  const torL   = region === 'toronto' ? torLTT(hp) : 0;
+  const ftbYes = $('ftb').value === 'yes';
+  const ftbReb = ftbYes ? -Math.min(onL, 4000) : 0;
+  const netLTT = onL + torL + ftbReb;
+  const closing = n('cc_legal') + n('cc_inspect') + n('cc_title') + n('cc_move');
+  const oneTime = netLTT + closing;
+
+  const assessed = settings.assessed != null ? settings.assessed : hp;
+  const ptaxAnn = assessed * ptr;
+  const ptaxMo  = ptaxAnn / 12;
+  const maintMo = settings.maint_custom != null ? settings.maint_custom : hp * settings.maint_pct / 12;
+
+  // Expenses
+  const insVal  = settings.ins   != null ? settings.ins   : n('exp_ins')      || pr.ins;
+  const condo   = n('exp_condo');
+  const hydro   = settings.hydro   != null ? settings.hydro  : n('exp_hydro')    || pr.hydro;
+  const gas     = settings.gas     != null ? settings.gas    : n('exp_gas')      || pr.gas;
+  const water   = settings.water   != null ? settings.water  : n('exp_water')    || pr.water;
+  const net     = settings.internet != null ? settings.internet : n('exp_internet') || pr.internet;
+  const utilTotal   = insVal + condo + hydro + gas + water + net;
+  const livingTotal = expenses.reduce((s, e) => s + (parseFloat(e.a) || 0), 0);
+  const debtTotal   = expenses
+    .filter(e => e.n.toLowerCase().includes('debt'))
+    .reduce((s, e) => s + e.a, 0);
+  const totalHousing = monthly + ptaxMo + maintMo + utilTotal;
+  const totalExp     = totalHousing + livingTotal;
+  const surplus      = combinedNet - totalExp;
+
+  // Stress test
+  const stR    = Math.max(rate + 0.02, 0.0525);
+  const stEr   = effRateAdj(stR);
+  const stPmt  = pmt(stEr, amort * 12, totalMtg);
+  const gds    = grossMonthly > 0 ? (monthly + ptaxMo + hydro) / grossMonthly : 0;
+  const tds    = grossMonthly > 0 ? (monthly + ptaxMo + hydro + debtTotal) / grossMonthly : 0;
+  const stGds  = grossMonthly > 0 ? (stPmt  + ptaxMo + hydro) / grossMonthly : 0;
+  const stTds  = grossMonthly > 0 ? (stPmt  + ptaxMo + hydro + debtTotal) / grossMonthly : 0;
+
+  // ── Update DOM ─────────────────────────────────────────────────────────
+  $('dpHint').textContent     = pct(dpPct) + ' of price';
+  $('stRateHint').textContent = pct(stR);
+
+  const sc = surplus >= 0 ? 'pos' : 'neg';
+  updateMobileNavDots();
+  setV('k-surplus',     cad(surplus),    sc);
+  setV('k-surplus-sub', combinedNet > 0 ? pct(surplus/combinedNet) + ' of net income' : '—');
+  setV('k-pmt',         cad(monthly));
+  const freqLabel = {12:'monthly',24:'semi-monthly',26:'bi-weekly',52:'weekly'}[freq]||'monthly';
+  setV('k-pmt-sub', amort + 'yr @ ' + (rate*100).toFixed(2) + '% · ' + freqLabel);
+  setV('k-close',       cad(oneTime));
+  setV('k-mtg',         cad(totalMtg));
+  setV('k-mtg-sub',     cmhcR > 0 ? 'CMHC ' + pct(cmhcR) + ' included' : 'Conventional — no CMHC');
+  setV('k-income',      cad(combinedNet));
+  setV('k-exp',         cad(totalExp));
+
+  const cw = $('cmhcWarn');
+  cw.style.display = cmhcR > 0 ? 'flex' : 'none';
+  if (cmhcR > 0)
+    $('cmhcWarnText').textContent =
+      'CMHC insurance required (' + pct(cmhcR) + ') — down payment is ' + pct(dpPct) +
+      '. Add ' + cad(hp * 0.2 - dp) + ' to reach 20% and avoid the premium.';
+
+  setV('cf-income',  cad(combinedNet), 'pos');
+  setV('cf-mtg',     cad(monthly));
+  setV('cf-ptax',    cad(ptaxMo));
+  setV('cf-ins',     cad(insVal));
+  setV('cf-util',    cad(hydro + gas + water + net));
+  setV('cf-maint',   cad(maintMo));
+  setV('cf-living',  cad(livingTotal));
+  setV('cf-surplus', cad(surplus), sc);
+
+  setBar('gds-bar',    'gds-pct',    'gds-badge',    gds,   0.39);
+  setBar('tds-bar',    'tds-pct',    'tds-badge',    tds,   0.44);
+  setBar('st-gds-bar', 'st-gds-pct', 'st-gds-badge', stGds, 0.39);
+  setBar('st-tds-bar', 'st-tds-pct', 'st-tds-badge', stTds, 0.44);
+
+  buildAmortMini(totalMtg, er, monthly, amort);
+  buildMortgageTab(totalMtg, er, monthly, amort, rate, hp);
+
+  // Income tab
+  setV('d-p1gross',   cad(p1Gross));
+  if (p1CPP) setV('d-p1cpp', '(' + cad(p1CPP).replace(/[()]/g,'') + ')');
+  setV('d-p1taxrate', p1TaxRate > 0 ? (p1TaxRate*100).toFixed(1)+'%' : '—');
+  setV('d-p1net',     cad(p1Net), 'pos');
+  const p1StreamGross = calcStreamGross(1);
+  setV('d-p1streams', p1StreamGross > 0 ? cad(p1StreamGross) + '/yr' : '—');
+
+  setV('d-p2gross',   cad(p2Gross));
+  setV('d-p2netinc',  cad(p2NetInc || p2Gross));
+  if (p2CPP) setV('d-p2cpp', '(' + cad(p2CPP).replace(/[()]/g,'') + ')');
+  setV('d-p2taxrate', p2TaxRate > 0 ? (p2TaxRate*100).toFixed(1)+'%' : '—');
+  setV('d-p2net',     cad(p2Net), 'pos');
+  const p2StreamGross = calcStreamGross(2);
+  setV('d-p2streams', p2StreamGross > 0 ? cad(p2StreamGross) + '/yr' : '—');
+
+  // Income tab mini dashboard
+  setV('id-p1net',    cad(p1Net), 'pos');
+  setV('id-p1taxlabel', p1TaxRate > 0 ? (p1TaxRate*100).toFixed(1)+'% effective rate' : '—');
+  setV('id-p2net',    cad(p2Net), 'pos');
+  setV('id-p2taxlabel', p2TaxRate > 0 ? (p2TaxRate*100).toFixed(1)+'% effective rate' : '—');
+  setV('id-combined', cad(combinedNet), 'pos');
+  setV('id-surplus',  cad(surplus), surplus >= 0 ? 'pos' : 'neg');
+  setV('id-surplus-pct', combinedNet > 0 ? pct(surplus/combinedNet) + ' of income' : '—');
+
+  const p2nd = document.getElementById('p2-netinc-row');
+  const p2sd = document.getElementById('p2-self-detail');
+  if (p2nd) p2nd.classList.toggle('inc-hidden', p2Type !== 'self');
+  if (p2sd) p2sd.classList.toggle('inc-hidden', p2Type !== 'self');
+  const nw = ['rrsp1','rrsp2','fhsa1','fhsa2','tfsa1','tfsa2','nonreg1','nonreg2','savings']
+    .reduce((s, id) => s + n(id), 0);
+  const nw1 = n('rrsp1') + n('fhsa1') + n('tfsa1') + n('nonreg1');
+  const nw2 = n('rrsp2') + n('fhsa2') + n('tfsa2') + n('nonreg2');
+  setV('d-networth',  cad(nw),  'pos');
+  setV('d-p1savings', cad(nw1), 'pos');
+  setV('d-p2savings', cad(nw2), 'pos');
+
+  // Property tab
+  // Property tab dashboard
+  setV('pd-hp',      cad(hp));
+  setV('pd-dppct',   pct(dpPct) + ' down');
+  setV('pd-mtg',     cad(totalMtg));
+  setV('pd-cmhc',    cmhcR > 0 ? 'CMHC ' + pct(cmhcR) + ' incl.' : 'No CMHC');
+  setV('pd-pmt',     cad(monthly));
+  setV('pd-ptax-val',cad(ptaxMo));
+  setV('pd-close',   cad(oneTime));
+
+  setV('d-hp',       cad(hp));
+  setV('d-dp',       cad(dp));
+  setV('d-dppct',    pct(dpPct));
+  setV('d-base',     cad(base));
+  setV('d-cmhcrate', cmhcR > 0 ? pct(cmhcR) : 'None');
+  setV('d-cmhcamt',  cmhcR > 0 ? cad(cmhcAmt) : '—');
+  setV('d-totalmtg', cad(totalMtg));
+  setV('d-effrate',  (er * 100).toFixed(4) + '%');
+  setV('d-pmt',      cad(monthly),  'warn');
+  setV('d-totint',   cad(totalInt), 'neg');
+  setV('d-ptax-ann', cad(ptaxAnn));
+  setV('d-ptax-mo',  cad(ptaxMo));
+  setV('d-onltt',    cad(onL));
+  setV('d-torltt',   region === 'toronto' ? cad(torL) : '—');
+  setV('d-ftbrebate',ftbYes ? cad(ftbReb) : '—', ftbYes ? 'pos' : '');
+  setV('d-netltt',   cad(netLTT));
+  setV('d-onetime',  cad(oneTime), 'warn');
+  $('lttNote').textContent =
+    region === 'toronto'     ? 'Double LTT applies — Ontario + Toronto City LTT stacked.' :
+    region === 'mississauga' ? 'Ontario LTT only. No municipal LTT in Mississauga.' :
+                               'Ontario LTT only.';
+
+  // Expenses tab
+  // Expenses tab dashboard
+  setV('ed-housing', cad(totalHousing));
+  setV('ed-living',  cad(livingTotal));
+  setV('ed-living-count', expenses.length + ' item' + (expenses.length !== 1 ? 's' : ''));
+  setV('ed-total',   cad(totalExp));
+  setV('ed-pct',     combinedNet > 0 ? pct(totalExp/combinedNet) + ' of net income' : '—');
+  setV('ed-surplus', cad(surplus), surplus >= 0 ? 'pos' : 'neg');
+
+  setV('e-mtg',          cad(monthly));
+  setV('e-ptax',         cad(ptaxMo));
+  setV('e-maint',        cad(maintMo));
+  setV('e-living-total', cad(livingTotal));
+}
+
+// ── Save / load (localStorage) ─────────────────────────────────────────────
+const SAVE_KEY = 'housing_v5';
+const FIELD_IDS = [
+  'p1','p2','hp','dp','region','rate','amort',
+  'p1_salary','p1_bonus','p1_other','p1_union','p1_tax','p1_rev','p1_biz','p1_stax','p1_contract','p1_ctax',
+  'p2_salary','p2_bonus','p2_union','p2_t4tax','p2_rev','p2_biz','p2_tax','p2_contract','p2_ctax',
+  'nonreg1','nonreg2',
+  'rrsp1','rrsp2','fhsa1','fhsa2','tfsa1','tfsa2','savings',
+  'ftb','cc_legal','cc_inspect','cc_title','cc_move',
+  'exp_ins','exp_condo','exp_hydro','exp_gas','exp_water','exp_internet',
+];
+
+let saveTimer = null;
+window.save = function save() {
+  $('saveDot').className  = 'save-dot saving';
+  $('saveLabel').textContent = 'Saving…';
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(() => {
+    const data = {};
+    FIELD_IDS.forEach(id => { const el = $(id); if (el) data[id] = el.value; });
+    data._expenses = JSON.stringify(expenses);
+    data._streams = JSON.stringify(incStreams);
+    data._settings = JSON.stringify(settings);
+    data._empType = JSON.stringify(empType);
+    localStorage.setItem(SAVE_KEY, JSON.stringify(data));
+    $('saveDot').className  = 'save-dot';
+    $('saveLabel').textContent = 'Saved';
+  }, 500);
+}
+
+window.load = function load() {
+  const raw = localStorage.getItem(SAVE_KEY);
+  if (raw) {
+    try {
+      const data = JSON.parse(raw);
+      Object.entries(data).forEach(([id, val]) => {
+        if (id === '_expenses') return;
+        const el = $(id); if (el) el.value = val;
+      });
+      if (data._expenses) expenses = JSON.parse(data._expenses);
+      if (data._streams) try { incStreams = JSON.parse(data._streams); } catch(e) {}
+      if (data._settings) try { Object.assign(settings, JSON.parse(data._settings)); } catch(e) {}
+      if (data._empType) try { Object.assign(empType, JSON.parse(data._empType)); } catch(e) {}
+    } catch(e) { console.warn('Load failed:', e); }
+  } else {
+    applyPreset('toronto', true);
+  }
+}
+
+window.resetAll = function resetAll() {
+  if (!confirm('Reset all inputs to defaults?')) return;
+  localStorage.removeItem(SAVE_KEY);
+  utilTouched = false;
+  const defaults = {
+    p1:120000, p2:80000, hp:950000, dp:190000,
+    rate:4.99, amort:'25', region:'toronto',
+    p1_tax:33, p2_biz:12000, p2_tax:28,
+    savings:190000, ftb:'yes',
+    cc_legal:2000, cc_inspect:500, cc_title:300, cc_move:3000,
+  };
+  FIELD_IDS.forEach(id => { const el = $(id); if (el) el.value = defaults[id] ?? ''; });
+  expenses = [
+    {n:'Groceries',                     a:800},
+    {n:'Dining out',                    a:400},
+    {n:'Transportation (gas, transit)', a:350},
+    {n:'Car insurance',                 a:200},
+    {n:'Child care / school',           a:0},
+    {n:'Entertainment / subscriptions', a:200},
+    {n:'Clothing / personal care',      a:200},
+    {n:'Health / dental',               a:150},
+    {n:'Travel (monthly avg)',          a:250},
+    {n:'RRSP / TFSA contributions',     a:500},
+    {n:'Debt payments (car, LOC)',      a:0},
+  ];
+  applyPreset('toronto', true);
+  renderExpenses(); save(); recalc();
+}
+
+// ── Employment type labels ───────────────────────────────────────────────
+const EMP_LABELS = {
+  t4:       { badge:'Employed',     badgeClass:'t4'       },
+  self:     { badge:'Self-employed', badgeClass:'self'     },
+  contract: { badge:'Contractor',   badgeClass:'contract' },
+  none:     { badge:'Not included', badgeClass:'none'     },
+};
+
+// ── Auto tax rate — Ontario + Federal marginal (2024) ─────────────────────
+function autoTaxRate(gross) {
+  if (!gross || gross <= 0) return 0.205;
+  let fed = 0;
+  const fg = Math.max(gross - 15705, 0);
+  if (fg <= 57375)       fed = fg * 0.205;
+  else if (fg <= 114750) fed = 57375*0.205 + (fg-57375)*0.26;
+  else if (fg <= 158000) fed = 57375*0.205 + 57375*0.26 + (fg-114750)*0.29;
+  else if (fg <= 220000) fed = 57375*0.205 + 57375*0.26 + 43250*0.29 + (fg-158000)*0.33;
+  else                   fed = 57375*0.205 + 57375*0.26 + 43250*0.29 + 62000*0.33 + (fg-220000)*0.335;
+  let ont = 0;
+  const og = Math.max(gross - 11865, 0);
+  if (og <= 51446)       ont = og * 0.0505;
+  else if (og <= 102894) ont = 51446*0.0505 + (og-51446)*0.0915;
+  else if (og <= 150000) ont = 51446*0.0505 + 51448*0.0915 + (og-102894)*0.1116;
+  else if (og <= 220000) ont = 51446*0.0505 + 51448*0.0915 + 47106*0.1116 + (og-150000)*0.1216;
+  else                   ont = 51446*0.0505 + 51448*0.0915 + 47106*0.1116 + 70000*0.1216 + (og-220000)*0.1316;
+  return gross > 0 ? Math.min((fed + ont) / gross, 0.55) : 0.20;
+}
+
+function getActiveRateField(person) {
+  const type = empType[person];
+  const map = { 1:{t4:'p1_tax',self:'p1_stax',contract:'p1_ctax'},
+                2:{t4:'p2_t4tax',self:'p2_tax',contract:'p2_ctax'} };
+  return map[person]?.[type] || null;
+}
+
+function resolveRate(person, gross) {
+  const fid = getActiveRateField(person);
+  const chk = fid ? document.getElementById(fid + '_chk') : null;
+  if (chk && chk.checked) {
+    const inp = document.getElementById(fid);
+    if (inp && inp.value) return parseFloat(inp.value) / 100;
+  }
+  if (person === 1 && settings.p1tax != null) return settings.p1tax;
+  if (person === 2 && settings.p2tax != null) return settings.p2tax;
+  return autoTaxRate(gross);
+}
+
+function updateTaxDisplay(person, gross) {
+  const fid = getActiveRateField(person);
+  if (!fid) return;
+  const autoEl = document.getElementById(fid + '_auto');
+  if (autoEl) autoEl.textContent = (autoTaxRate(gross) * 100).toFixed(1) + '%';
+}
+
+window.toggleTaxOverride = function(person, chk) {
+  const fid = getActiveRateField(person);
+  if (!fid) return;
+  const inp = document.getElementById(fid);
+  if (!inp) return;
+  inp.disabled = !chk.checked;
+  if (!chk.checked) inp.value = '';
+  save(); recalc();
+};
+
+// ── Employment type switcher ───────────────────────────────────────────────
+window.setEmpType = function(person, type, btn) {
+  empType[person] = type;
+  document.querySelectorAll(`.emp-type-btn[data-person="${person}"]`).forEach(b => {
+    b.classList.toggle('active', b === btn);
+  });
+  ['t4','self','contract','none'].forEach(t => {
+    const el = document.getElementById(`p${person}-${t}-fields`);
+    if (el) el.classList.toggle('inc-hidden', t !== type);
+  });
+  const selfDetail = document.getElementById(`p${person}-self-detail`);
+  if (selfDetail) selfDetail.classList.toggle('inc-hidden', type !== 'self');
+  const info = EMP_LABELS[type] || EMP_LABELS.t4;
+  const badgeEl = document.getElementById(`p${person}-type-badge`);
+  if (badgeEl) { badgeEl.textContent = info.badge; badgeEl.className = `type-badge ${info.badgeClass}`; }
+  // push current sidebar value into newly active tab field
+  if (person === 1) syncP1(); else syncP2();
+  save(); recalc();
+};
+
+// ── Collapsible left panel ────────────────────────────────────────────────
+window.toggleLeft = function() {
+  const appEl = document.getElementById('app');
+  const collapsed = appEl.classList.toggle('left-collapsed');
+  localStorage.setItem('leftCollapsed', collapsed ? '1' : '0');
+};
+
+
+// ── Extra income streams ──────────────────────────────────────────────────
+// streams[1] = [{type:'rental', amount:1500, taxable:true}, ...]
+let incStreams = { 1: [], 2: [] };
+
+const STREAM_TYPES = [
+  { value:'rental',    label:'Rental income',         taxable:true,  rate:1.0  },
+  { value:'dividend',  label:'Eligible dividends',    taxable:true,  rate:0.69 }, // gross-up 38%, effective lower
+  { value:'interest',  label:'Interest income',       taxable:true,  rate:1.0  },
+  { value:'pension',   label:'Pension / RRSP income', taxable:true,  rate:1.0  },
+  { value:'cpp_oas',   label:'CPP / OAS',             taxable:true,  rate:1.0  },
+  { value:'part_time', label:'Part-time employment',  taxable:true,  rate:1.0  },
+  { value:'side_biz',  label:'Side business / gig',   taxable:true,  rate:1.0  },
+  { value:'support',   label:'Child / spousal support',taxable:false, rate:0.0  },
+  { value:'other',     label:'Other (non-taxable)',    taxable:false, rate:0.0  },
+];
+
+function getStreamOpts() {
+  return STREAM_TYPES.map(t =>
+    `<option value="${t.value}">${t.label}</option>`
+  ).join('');
+}
+
+window.renderStreams = function(person) {
+  const list = document.getElementById(`p${person}-stream-list`);
+  if (!list) return;
+  list.innerHTML = '';
+  (incStreams[person] || []).forEach((s, i) => {
+    const row = document.createElement('div');
+    row.className = 'stream-row';
+    row.innerHTML =
+      `<select onchange="incStreams[${person}][${i}].type=this.value;save();recalc()">${getStreamOpts()}</select>` +
+      `<input type="number" placeholder="Annual $" value="${s.amount||''}"
+         oninput="incStreams[${person}][${i}].amount=parseFloat(this.value)||0;save();recalc()">` +
+      `<button class="btn-rm" aria-label="Remove" onclick="incStreams[${person}].splice(${i},1);renderStreams(${person});save();recalc()">` +
+      `<svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M2 2l8 8M10 2L2 10"/></svg></button>`;
+    // restore selected type
+    row.querySelector('select').value = s.type || 'rental';
+    list.appendChild(row);
+  });
+};
+
+window.addStream = function(person) {
+  if (!incStreams[person]) incStreams[person] = [];
+  incStreams[person].push({ type: 'rental', amount: 0 });
+  renderStreams(person);
+  save();
+  recalc();
+};
+
+function calcStreamNet(person, primaryTaxRate) {
+  // Returns annual net-of-tax extra income
+  const streams = incStreams[person] || [];
+  return streams.reduce((sum, s) => {
+    const def  = STREAM_TYPES.find(t => t.value === s.type) || STREAM_TYPES[0];
+    const gross = (s.amount || 0) * def.rate; // apply eligible dividend gross-up factor
+    const taxable = def.taxable ? gross * primaryTaxRate : 0;
+    return sum + gross - taxable;
+  }, 0);
+}
+
+function calcStreamGross(person) {
+  const streams = incStreams[person] || [];
+  return streams.reduce((sum, s) => sum + (s.amount || 0), 0);
+}
+
+
+// ── Mortgage tab builder ──────────────────────────────────────────────────
+function buildMortgageTab(principal, er, monthly, amort, rate, hp) {
+  const cad = v => '$' + Math.round(Math.abs(v)).toLocaleString('en-CA');
+  const pct = (v, d=1) => (v*100).toFixed(d) + '%';
+  const sv  = (id, val) => { const el = document.getElementById(id); if(el) el.textContent = val; };
+
+  const totalPaid = monthly * amort * 12;
+  const totalInt  = totalPaid - principal;
+  const intPct    = totalInt / hp;
+
+  // break-even: first year equity > 50%
+  let beYear = amort, bal = principal;
+  for (let yr = 1; yr <= amort; yr++) {
+    for (let m = 0; m < 12; m++) {
+      const im = bal * er;
+      bal = Math.max(bal - (monthly - im), 0);
+    }
+    if ((1 - bal / principal) >= 0.5 && beYear === amort) beYear = yr;
+  }
+
+  // first-year split
+  let b = principal, yr1prin = 0, yr1int = 0;
+  for (let m = 0; m < 12; m++) {
+    const im = b * er;
+    const pm = Math.min(monthly - im, b);
+    yr1int += im; yr1prin += pm;
+    b = Math.max(b - pm, 0);
+  }
+
+  // mid-point
+  const midYr = Math.round(amort / 2);
+  let bMid = principal;
+  for (let m = 0; m < midYr * 12; m++) {
+    const im = bMid * er;
+    bMid = Math.max(bMid - (monthly - im), 0);
+  }
+  const midEq = principal - bMid;
+
+  sv('ms-total',    cad(principal));
+  sv('ms-pmt',      cad(monthly));
+  sv('ms-interest', cad(totalInt));
+  sv('ms-int-pct',  pct(intPct));
+  sv('ms-breakeven','Year ' + beYear);
+  sv('ms-effrate',  (er * 100).toFixed(4) + '%');
+
+  const yr1tot = yr1prin + yr1int;
+  const setW = (id, p) => { const el = document.getElementById(id); if(el) el.style.width = Math.min(p*100,100)+'%'; };
+  setW('sb-prin-bar', yr1tot > 0 ? yr1prin/yr1tot : 0);
+  setW('sb-int-bar',  yr1tot > 0 ? yr1int/yr1tot  : 0);
+  sv('sb-prin-amt', cad(yr1prin));
+  sv('sb-int-amt',  cad(yr1int));
+  setW('sb-eq-bar',  midEq/principal);
+  setW('sb-bal-bar', bMid/principal);
+  sv('sb-eq-amt',  cad(midEq));
+  sv('sb-bal-amt', cad(bMid));
+
+  // Annual schedule table
+  const tbody = document.getElementById('schedBody');
+  if (!tbody) return;
+  tbody.innerHTML = '';
+  let balance = principal;
+  for (let yr = 1; yr <= amort; yr++) {
+    let opening = balance, intYr = 0, prinYr = 0;
+    for (let m = 0; m < 12; m++) {
+      const im = balance * er;
+      const pm = Math.min(monthly - im, balance);
+      intYr += im; prinYr += pm;
+      balance = Math.max(balance - pm, 0);
+    }
+    const equity   = 1 - balance / principal;
+    const intShare = intYr / (intYr + prinYr);
+    const tr = document.createElement('tr');
+    if (yr === amort)      tr.className = 'final-yr';
+    else if (yr === midYr) tr.className = 'mid-yr';
+    tr.innerHTML =
+      `<td>${yr}</td>` +
+      `<td>${cad(opening)}</td>` +
+      `<td>${cad(monthly*12)}</td>` +
+      `<td>${cad(prinYr)}</td>` +
+      `<td>${cad(intYr)}</td>` +
+      `<td>${cad(balance)}</td>` +
+      `<td>${pct(intShare)}</td>` +
+      `<td>${pct(equity)}</td>`;
+    tbody.appendChild(tr);
+  }
+}
+
+
+// ── Theme management ─────────────────────────────────────────────────────
+window.setTheme = function(mode) {
+  const html = document.documentElement;
+  if (mode === 'dark')        html.setAttribute('data-theme', 'dark');
+  else if (mode === 'light')  html.setAttribute('data-theme', 'light');
+  else                         html.removeAttribute('data-theme');  // system
+  localStorage.setItem('theme', mode);
+  updateThemeButtons(mode);
+};
+
+function updateThemeButtons(mode) {
+  ['system','light','dark'].forEach(m => {
+    const btn = document.getElementById('theme-' + m);
+    if (btn) btn.classList.toggle('active', m === mode);
+  });
+}
+
+function initTheme() {
+  const saved = localStorage.getItem('theme') || 'system';
+  setTheme(saved);
+}
+
+
+// ── Disclaimer modal ─────────────────────────────────────────────────────
+window.acceptDisclaimer = function() {
+  document.getElementById('disclaimer-overlay').classList.add('hidden');
+  localStorage.setItem('disc_accepted', '1');
+};
+
+function initDisclaimer() {
+  const el = document.getElementById('disclaimer-overlay');
+  if (!el) return;
+  if (localStorage.getItem('disc_accepted') === '1') {
+    el.classList.add('hidden');
+  }
+}
+
+
+// ── Update mobile nav dot colours based on filled fields ─────────────────
+function updateMobileNavDots() {
+  const parseLeft = id => {
+    const el = document.getElementById(id);
+    return parseFloat((el?.value || '').replace(/,/g, '')) || 0;
+  };
+  const states = [
+    parseLeft('p1') > 0 || parseLeft('p2') > 0,   // income icon
+    parseLeft('hp') > 0 && parseLeft('dp') > 0,    // property icon
+    parseFloat(document.getElementById('rate')?.value || 0) > 0  // mortgage icon
+  ];
+  const iconIds = ['icon-income', 'icon-property', 'icon-mortgage'];
+  iconIds.forEach((id, i) => {
+    const el = document.getElementById(id);
+    if (el) el.classList.toggle('filled', states[i]);
+  });
+}
+
+// ── Dashboard empty-field validation ─────────────────────────────────────
+// Returns a warning string if critical fields are 0/empty, else null
+function getValidationWarning() {
+  const warnings = [];
+  if (n('hp')   === 0) warnings.push('House price');
+  if (n('rate') === 0) warnings.push('Interest rate');
+  if (n('p1')   === 0 && n('p2') === 0) warnings.push('Income (Person 1 or 2)');
+  return warnings.length ? warnings : null;
+}
+
+// ── Init ───────────────────────────────────────────────────────────────────
+initTheme();
+load();
+// restore employment types
+[1,2].forEach(p => {
+  const t = empType[p] || (p===1?'t4':'self');
+  const btn = document.querySelector(`.emp-type-btn[data-person="${p}"][data-type="${t}"]`);
+  if (btn) setEmpType(p, t, btn);
+});
+// restore left panel collapsed state
+if (localStorage.getItem('leftCollapsed') === '1') {
+  document.getElementById('app').classList.add('left-collapsed');
+}
+renderExpenses();
+applyPreset($('region').value, false);
+recalc();
+
+
+
+
+
+
+
+// ── Tooltip toggle ─────────────────────────────────────────────────────────
+window.toggleTip = function(btn) {
+  const tip = document.getElementById('global-tip');
+  if (!tip) return;
+  // if this button's tip is already showing, hide it
+  if (tip._src === btn && tip.classList.contains('visible')) {
+    tip.classList.remove('visible');
+    tip._src = null;
+    return;
+  }
+  // populate content from data-tip
+  const content = btn.getAttribute('data-tip') || '';
+  tip.innerHTML = content;
+  tip._src = btn;
+  // position: below the button, clamped to viewport
+  const r   = btn.getBoundingClientRect();
+  const tw  = 220, th = 240, margin = 8;
+  let left  = r.right - tw;
+  let top   = r.bottom + 6;
+  if (left < margin) left = margin;
+  if (left + tw > window.innerWidth  - margin) left = window.innerWidth  - tw - margin;
+  if (top  + th > window.innerHeight - margin) top  = r.top - th - 6;
+  if (top < margin) top = margin;
+  tip.style.left = left + 'px';
+  tip.style.top  = top  + 'px';
+  tip.classList.add('visible');
+}
+
+window.markOverride = function(input, tagId) {
+  if (tagId) {
+    const tag = $(tagId);
+    if (tag) {
+      tag.textContent = input.value ? 'OVERRIDE' : 'AUTO';
+      tag.className   = input.value ? 'override-tag' : 'auto-tag';
+    }
+  }
+  if (input.value) input.classList.add('overridden');
+  else input.classList.remove('overridden');
+};
+
+window.toggleMaintCustom = function() {
+  const sel = $('s_maint_pct');
+  $('s_maint_custom_wrap').style.display = sel.value === 'custom' ? 'flex' : 'none';
+};
+
+window.switchModalTab = function(name, btn) {
+  document.querySelectorAll('.modal-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.modal-tab').forEach(b => b.classList.remove('active'));
+  const panel = document.getElementById('mpanel-' + name);
+  if (panel) panel.classList.add('active');
+  btn.classList.add('active');
+};
+
+window.clearAllSettings = function() {
+  settings = { ptr:null, assessed:null, freq:12, renewrate:null, prepay:0, compound:2,
+    ins:null, hydro:null, gas:null, water:null, internet:null,
+    maint_pct:0.01, maint_custom:null, p1tax:null, p2tax:null, cpp:0.1188, cpp_cap:8068 };
+  openSettings();
+};
+
+window.openSettings = function() {
+  const region = $('region').value;
+  const pr = PRESETS[region];
+  // update auto hints
+  const fmt = v => '$' + v;
+  $('s_ptr_auto').textContent     = (pr.ptr * 100).toFixed(2) + '%';
+  $('s_ins_hint').textContent     = fmt(pr.ins);
+  $('s_hydro_hint').textContent   = fmt(pr.hydro);
+  $('s_gas_hint').textContent     = fmt(pr.gas);
+  $('s_water_hint').textContent   = fmt(pr.water);
+  $('s_internet_hint').textContent= fmt(pr.internet);
+  // restore values
+  const s = settings;
+  const sv = (id, v) => { const el=$(id); if(el) el.value = v != null ? v : ''; };
+  sv('s_ptr',       s.ptr != null ? (s.ptr * 100).toFixed(3) : '');
+  sv('s_assessed',  s.assessed || '');
+  $('s_freq').value     = s.freq;
+  sv('s_renewrate', s.renewrate ? (s.renewrate * 100).toFixed(2) : '');
+  sv('s_prepay',    s.prepay || '');
+  $('s_compound').value = s.compound;
+  sv('s_ins',       s.ins || '');
+  sv('s_hydro',     s.hydro || '');
+  sv('s_gas',       s.gas || '');
+  sv('s_water',     s.water || '');
+  sv('s_internet',  s.internet || '');
+  $('s_maint_pct').value = s.maint_custom != null ? 'custom' : s.maint_pct;
+  sv('s_maint_custom', s.maint_custom || '');
+  $('s_maint_custom_wrap').style.display = s.maint_custom != null ? 'flex' : 'none';
+  sv('s_p1tax',     s.p1tax != null ? (s.p1tax * 100).toFixed(1) : '');
+  sv('s_p2tax',     s.p2tax != null ? (s.p2tax * 100).toFixed(1) : '');
+  $('s_cpp').value      = (s.cpp * 100).toFixed(2);
+  $('s_cpp_cap').value  = s.cpp_cap;
+  // update override tags
+  const tags = [
+    ['s_ptr','s_ptr_tag'], ['s_ins','s_ins_tag'], ['s_hydro','s_hydro_tag'],
+    ['s_gas','s_gas_tag'], ['s_water','s_water_tag'], ['s_internet','s_internet_tag'],
+  ];
+  tags.forEach(([inp, tag]) => {
+    const el=$(inp); const t=$(tag);
+    if(el && t) {
+      const hasVal = el.value !== '';
+      t.textContent = hasVal ? 'OVERRIDE' : 'AUTO';
+      t.className   = hasVal ? 'override-tag' : 'auto-tag';
+      if(hasVal) el.classList.add('overridden'); else el.classList.remove('overridden');
+    }
+  });
+  $('settingsOverlay').classList.add('open');
+  document.querySelector('.btn-icon').classList.add('active');
+};
+
+window.closeSettings = function() {
+  $('settingsOverlay').classList.remove('open');
+  document.querySelector('.btn-icon').classList.remove('active');
+};
+
+window.overlayClick = function(e) {
+  if (e.target === $('settingsOverlay')) closeSettings();
+};
+
+window.applySettings = function() {
+  const g  = id => parseFloat($(id).value);
+  const gs = id => $(id).value.trim();
+  settings.ptr        = gs('s_ptr')      ? g('s_ptr') / 100 : null;
+  settings.assessed   = gs('s_assessed') ? g('s_assessed')  : null;
+  settings.freq       = parseInt($('s_freq').value) || 12;
+  settings.renewrate  = gs('s_renewrate') ? g('s_renewrate') / 100 : null;
+  settings.prepay     = g('s_prepay') || 0;
+  settings.compound   = parseInt($('s_compound').value) || 2;
+  settings.ins        = gs('s_ins')     ? g('s_ins')     : null;
+  settings.hydro      = gs('s_hydro')   ? g('s_hydro')   : null;
+  settings.gas        = gs('s_gas')     ? g('s_gas')     : null;
+  settings.water      = gs('s_water')   ? g('s_water')   : null;
+  settings.internet   = gs('s_internet')? g('s_internet'): null;
+  const mp = $('s_maint_pct').value;
+  settings.maint_pct    = mp === 'custom' ? 0.01 : parseFloat(mp);
+  settings.maint_custom = mp === 'custom' && gs('s_maint_custom') ? g('s_maint_custom') : null;
+  settings.p1tax      = gs('s_p1tax')   ? g('s_p1tax') / 100   : null;
+  settings.p2tax      = gs('s_p2tax')   ? g('s_p2tax') / 100   : null;
+  settings.cpp        = gs('s_cpp')     ? g('s_cpp') / 100      : 0.1188;
+  settings.cpp_cap    = gs('s_cpp_cap') ? g('s_cpp_cap')        : 8068;
+  // check if any overrides active
+  const overrideCount = [s.ptr, s.assessed, s.renewrate, s.ins, s.hydro, s.gas, s.water, s.internet, s.maint_custom].filter(v => v != null).length
+    + (s.freq !== 12 ? 1 : 0) + (s.compound !== 2 ? 1 : 0) + (s.prepay > 0 ? 1 : 0)
+    + (s.p1tax != null ? 1 : 0) + (s.p2tax != null ? 1 : 0)
+    + (s.maint_pct !== 0.01 ? 1 : 0);
+  settingsOverridden = overrideCount > 0;
+  const btnIcon = document.querySelector('.btn-icon');
+  btnIcon.classList.toggle('active', settingsOverridden);
+  btnIcon.title = settingsOverridden ? overrideCount + ' override' + (overrideCount > 1 ? 's' : '') + ' active' : 'Adjust assumptions';
+  closeSettings();
+  save(); recalc();
+};
+
+// Keyboard close
+document.addEventListener('click', function(e) {
+  if (!e.target.closest('.info-btn') && !e.target.closest('.kpi-info')) {
+    const tip = document.getElementById('global-tip');
+    if (tip) { tip.classList.remove('visible'); tip._src = null; }
+  }
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeSettings();
+});
+
+document.addEventListener('click', function(e) {
+  if (!e.target.closest('.tip-anchor') && !e.target.closest('.kpi-info')) {
+    document.querySelectorAll('.tooltip.show').forEach(t => t.classList.remove('show'));
+  }
+});
+
+</script>
+
+<!-- ── SETTINGS MODAL ────────────────────────────────────── -->
+<div class="modal-overlay" id="settingsOverlay" onclick="overlayClick(event)">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+
+    <div class="modal-header">
+      <div>
+        <div class="modal-title" id="modalTitle">Adjust assumptions</div>
+        <div class="modal-subtitle">These values are estimated automatically — change any to override</div>
+      </div>
+      <button class="btn-close" onclick="closeSettings()" aria-label="Close">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M2 2l10 10M12 2L2 12"/></svg>
+      </button>
+    </div>
+
+    <div class="modal-tabs">
+      <button class="modal-tab active" onclick="switchModalTab('prop',this)">
+        <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 7L8 2l6 5v7a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1z"/><path d="M6 14V9h4v5"/></svg>
+        Property
+      </button>
+      <button class="modal-tab" onclick="switchModalTab('mtg',this)">
+        <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="4" width="12" height="9" rx="1.5"/><path d="M5 4V3a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v1M8 8v2"/></svg>
+        Mortgage
+      </button>
+      <button class="modal-tab" onclick="switchModalTab('util',this)">
+        <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 2v3M12.2 3.8l-2.1 2.1M14 8h-3M12.2 12.2l-2.1-2.1M8 14v-3M3.8 12.2l2.1-2.1M2 8h3M3.8 3.8l2.1 2.1"/><circle cx="8" cy="8" r="2"/></svg>
+        Utilities
+      </button>
+      <button class="modal-tab" onclick="switchModalTab('tax',this)">
+        <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="5" width="12" height="9" rx="1.5"/><path d="M5 5V4a3 3 0 0 1 6 0v1"/></svg>
+        Income &amp; Tax
+      </button>
+      <button class="modal-tab" onclick="switchModalTab('about',this)">
+        <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="8" r="5.5"/><path d="M8 7v4M8 5.5v.5"/></svg>
+        About
+      </button>
+    </div>
+
+    <div class="modal-body">
+
+      <!-- ── PROPERTY PANEL ── -->
+      <div class="modal-panel active" id="mpanel-prop">
+
+        <div class="panel-section">
+          <div class="panel-section-label">
+            <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><circle cx="8" cy="8" r="5.5"/><path d="M8 6v4M8 5h.01"/></svg>
+            Property tax
+          </div>
+        </div>
+
+        <div class="override-row">
+          <div>
+            <div class="override-label">Tax rate</div>
+            <div class="override-desc">Annual % of assessed value used to calculate property tax</div>
+          </div>
+          <div class="override-auto"><span class="auto-tag" id="s_ptr_tag">AUTO</span><span id="s_ptr_auto">—</span></div>
+          <div class="override-input">
+            <input type="number" id="s_ptr" step="0.01" placeholder="e.g. 0.63" oninput="markOverride(this,'s_ptr_tag')">
+          </div>
+        </div>
+
+        <div class="override-row">
+          <div>
+            <div class="override-label">Assessed value</div>
+            <div class="override-desc">MPAC assessed value if different from purchase price</div>
+          </div>
+          <div class="override-auto"><span class="auto-tag">AUTO</span>= purchase price</div>
+          <div class="override-input">
+            <input type="number" id="s_assessed" placeholder="e.g. 850,000" oninput="markOverride(this,null)">
+          </div>
+        </div>
+
+        <div class="panel-section" style="margin-top:20px">
+          <div class="panel-section-label">
+            <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M3 13V6l5-3.5L13 6v7"/><rect x="6" y="9" width="4" height="4"/></svg>
+            Maintenance reserve
+          </div>
+        </div>
+
+        <div class="override-row">
+          <div>
+            <div class="override-label">Annual reserve rate</div>
+            <div class="override-desc">Set aside each month for repairs (roof, HVAC, appliances)</div>
+          </div>
+          <div class="override-auto"><span class="auto-tag">AUTO</span>1% p.a.</div>
+          <div class="override-input">
+            <select id="s_maint_pct" onchange="toggleMaintCustom()">
+              <option value="0.01">1% per year</option>
+              <option value="0.015">1.5% per year</option>
+              <option value="0.02">2% per year</option>
+              <option value="custom">Custom $</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="override-row" id="s_maint_custom_wrap" style="display:none">
+          <div>
+            <div class="override-label">Custom monthly amount</div>
+            <div class="override-desc">Fixed monthly maintenance budget</div>
+          </div>
+          <div class="override-auto"></div>
+          <div class="override-input">
+            <input type="number" id="s_maint_custom" placeholder="e.g. 600">
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ── MORTGAGE PANEL ── -->
+      <div class="modal-panel" id="mpanel-mtg">
+
+        <div class="panel-section">
+          <div class="panel-section-label">
+            <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M3 13V6l5-3.5L13 6v7"/></svg>
+            Payment structure
+          </div>
+        </div>
+
+        <div class="override-row">
+          <div>
+            <div class="override-label">Payment frequency</div>
+            <div class="override-desc">How often you make mortgage payments — bi-weekly saves interest</div>
+          </div>
+          <div class="override-auto"><span class="auto-tag">AUTO</span>Monthly</div>
+          <div class="override-input">
+            <select id="s_freq">
+              <option value="12">Monthly</option>
+              <option value="24">Semi-monthly</option>
+              <option value="26">Bi-weekly</option>
+              <option value="52">Weekly</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="override-row">
+          <div>
+            <div class="override-label">Compounding convention</div>
+            <div class="override-desc">Canadian mortgages compound semi-annually by law</div>
+          </div>
+          <div class="override-auto"><span class="auto-tag">AUTO</span>Semi-annual</div>
+          <div class="override-input">
+            <select id="s_compound">
+              <option value="2">Semi-annual (Canada)</option>
+              <option value="12">Monthly (US-style)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="panel-section" style="margin-top:20px">
+          <div class="panel-section-label">
+            <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><circle cx="8" cy="8" r="5.5"/><path d="M8 5v3.5L10.5 10"/></svg>
+            Scenario planning
+          </div>
+        </div>
+
+        <div class="override-row">
+          <div>
+            <div class="override-label">Renewal rate (year 6+)</div>
+            <div class="override-desc">Expected rate when your 5-year term renews — shown in Mortgage tab</div>
+          </div>
+          <div class="override-auto"><span class="auto-tag">OPTIONAL</span></div>
+          <div class="override-input">
+            <input type="number" id="s_renewrate" step="0.01" placeholder="e.g. 5.50">
+          </div>
+        </div>
+
+        <div class="override-row">
+          <div>
+            <div class="override-label">Annual lump-sum prepayment</div>
+            <div class="override-desc">Extra payment per year reduces principal and shortens amortization</div>
+          </div>
+          <div class="override-auto"><span class="auto-tag">OPTIONAL</span></div>
+          <div class="override-input">
+            <input type="number" id="s_prepay" placeholder="e.g. 5,000">
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ── UTILITIES PANEL ── -->
+      <div class="modal-panel" id="mpanel-util">
+
+        <div class="panel-section">
+          <div class="panel-section-label">
+            <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M8 2v3M12.2 3.8l-2.1 2.1M14 8h-3M12.2 12.2l-2.1-2.1M8 14v-3M3.8 12.2l2.1 2.1M2 8h3M3.8 3.8l2.1 2.1"/><circle cx="8" cy="8" r="2"/></svg>
+            Monthly utility costs — pre-filled from your region average
+          </div>
+        </div>
+
+        <div class="override-row">
+          <div>
+            <div class="override-label">Home insurance</div>
+            <div class="override-desc">Monthly premium for your home and contents</div>
+          </div>
+          <div class="override-auto"><span class="auto-tag" id="s_ins_tag">AUTO</span><span id="s_ins_hint">—</span></div>
+          <div class="override-input">
+            <input type="number" id="s_ins" placeholder="e.g. 220" oninput="markOverride(this,'s_ins_tag')">
+          </div>
+        </div>
+
+        <div class="override-row">
+          <div>
+            <div class="override-label">Hydro (electricity)</div>
+            <div class="override-desc">Varies by home size and season — electric heat adds significantly</div>
+          </div>
+          <div class="override-auto"><span class="auto-tag" id="s_hydro_tag">AUTO</span><span id="s_hydro_hint">—</span></div>
+          <div class="override-input">
+            <input type="number" id="s_hydro" placeholder="e.g. 155" oninput="markOverride(this,'s_hydro_tag')">
+          </div>
+        </div>
+
+        <div class="override-row">
+          <div>
+            <div class="override-label">Gas / heat</div>
+            <div class="override-desc">Natural gas for forced-air heating — higher in winter</div>
+          </div>
+          <div class="override-auto"><span class="auto-tag" id="s_gas_tag">AUTO</span><span id="s_gas_hint">—</span></div>
+          <div class="override-input">
+            <input type="number" id="s_gas" placeholder="e.g. 140" oninput="markOverride(this,'s_gas_tag')">
+          </div>
+        </div>
+
+        <div class="override-row">
+          <div>
+            <div class="override-label">Water</div>
+            <div class="override-desc">Municipal water and sewer — billed quarterly in most GTA cities</div>
+          </div>
+          <div class="override-auto"><span class="auto-tag" id="s_water_tag">AUTO</span><span id="s_water_hint">—</span></div>
+          <div class="override-input">
+            <input type="number" id="s_water" placeholder="e.g. 65" oninput="markOverride(this,'s_water_tag')">
+          </div>
+        </div>
+
+        <div class="override-row">
+          <div>
+            <div class="override-label">Internet / phone</div>
+            <div class="override-desc">Home internet plus mobile plan(s)</div>
+          </div>
+          <div class="override-auto"><span class="auto-tag" id="s_internet_tag">AUTO</span><span id="s_internet_hint">—</span></div>
+          <div class="override-input">
+            <input type="number" id="s_internet" placeholder="e.g. 160" oninput="markOverride(this,'s_internet_tag')">
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ── TAX PANEL ── -->
+      <div class="modal-panel" id="mpanel-tax">
+
+        <div class="panel-section">
+          <div class="panel-section-label">
+            <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><rect x="2" y="5" width="12" height="9" rx="1.5"/><path d="M5 5V4a3 3 0 0 1 6 0v1"/></svg>
+            Income tax rates
+          </div>
+        </div>
+
+        <div class="override-row">
+          <div>
+            <div class="override-label">Person 1 — effective tax rate</div>
+            <div class="override-desc">Combined federal + Ontario marginal rate on employment income</div>
+          </div>
+          <div class="override-auto"><span class="auto-tag">DEFAULT</span>33%</div>
+          <div class="override-input">
+            <input type="number" id="s_p1tax" placeholder="33" step="0.5">
+          </div>
+        </div>
+
+        <div class="override-row">
+          <div>
+            <div class="override-label">Person 2 — effective tax rate</div>
+            <div class="override-desc">Combined rate for self-employment / contract income</div>
+          </div>
+          <div class="override-auto"><span class="auto-tag">DEFAULT</span>28%</div>
+          <div class="override-input">
+            <input type="number" id="s_p2tax" placeholder="28" step="0.5">
+          </div>
+        </div>
+
+        <div class="panel-section" style="margin-top:20px">
+          <div class="panel-section-label">
+            <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><circle cx="8" cy="8" r="5.5"/><path d="M8 6v4M8 5h.01"/></svg>
+            CPP — Canada Pension Plan (Person 2)
+          </div>
+        </div>
+
+        <div class="override-row">
+          <div>
+            <div class="override-label">Self-employment CPP rate</div>
+            <div class="override-desc">Self-employed pay both employee + employer share (~11.88%)</div>
+          </div>
+          <div class="override-auto"><span class="auto-tag">DEFAULT</span>11.88%</div>
+          <div class="override-input">
+            <input type="number" id="s_cpp" placeholder="11.88" step="0.01">
+          </div>
+        </div>
+
+        <div class="override-row">
+          <div>
+            <div class="override-label">CPP annual maximum</div>
+            <div class="override-desc">Contribution caps at this amount regardless of income</div>
+          </div>
+          <div class="override-auto"><span class="auto-tag">DEFAULT</span>$8,068</div>
+          <div class="override-input">
+            <input type="number" id="s_cpp_cap" placeholder="8068">
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+      <!-- ── ABOUT PANEL ── -->
+      <div class="modal-panel" id="mpanel-about">
+
+        <!-- App header -->
+        <div style="text-align:center;padding:20px 0 16px;border-bottom:1px solid var(--border)">
+          <div style="width:48px;height:48px;border-radius:12px;background:var(--blue);
+                      display:flex;align-items:center;justify-content:center;margin:0 auto 10px">
+            <svg width="24" height="24" viewBox="0 0 16 16" fill="none" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 7L8 2l6 5v7a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1z"/><path d="M6 14V9h4v5"/></svg>
+          </div>
+          <div style="font-size:16px;font-weight:700;color:var(--text);letter-spacing:-.3px">Housing Feasibility</div>
+          <div style="font-size:11px;color:var(--text3);margin-top:3px">GTA home purchase calculator &middot; Ontario &amp; Federal tax math</div>
+          <div style="font-size:10px;color:var(--text3);margin-top:4px;opacity:.8">Estimates only &middot; Not financial or legal advice</div>
+          <div style="display:flex;flex-wrap:wrap;gap:5px;justify-content:center;margin-top:10px">
+            <span style="font-size:10px;padding:3px 8px;border-radius:10px;background:var(--bg3);color:var(--text2)">CMHC</span>
+            <span style="font-size:10px;padding:3px 8px;border-radius:10px;background:var(--bg3);color:var(--text2)">LTT + rebates</span>
+            <span style="font-size:10px;padding:3px 8px;border-radius:10px;background:var(--bg3);color:var(--text2)">Stress test</span>
+            <span style="font-size:10px;padding:3px 8px;border-radius:10px;background:var(--bg3);color:var(--text2)">Multi-income</span>
+            <span style="font-size:10px;padding:3px 8px;border-radius:10px;background:var(--bg3);color:var(--text2)">Self-employed</span>
+            <span style="font-size:10px;padding:3px 8px;border-radius:10px;background:var(--bg3);color:var(--text2)">GDS / TDS</span>
+          </div>
+        </div>
+
+        <!-- Privacy — above Umer -->
+        <div style="display:flex;align-items:flex-start;gap:10px;
+                    margin:12px 0;padding:11px 13px;
+                    background:var(--green-bg);border-radius:var(--radius);
+                    border:1px solid rgba(74,222,128,0.18)">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="var(--green)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:1px"><rect x="3" y="7" width="10" height="8" rx="1.5"/><path d="M5 7V5a3 3 0 0 1 6 0v2"/></svg>
+          <div style="font-size:11px;color:var(--text2);line-height:1.6">
+            <strong style="color:var(--text)">100% private &amp; local.</strong>
+            Runs entirely in your browser — no servers, no accounts, no analytics. Your numbers never leave your device. Data persists in <code style="font-family:var(--mono);font-size:10px;background:var(--bg3);padding:1px 4px;border-radius:3px">localStorage</code>; use incognito or hit Reset to clear.
+          </div>
+        </div>
+
+        <!-- Umer Ijaz -->
+        <div style="border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:12px">
+          <div style="padding:9px 14px;background:var(--bg3);
+                      font-size:10px;font-weight:700;text-transform:uppercase;
+                      letter-spacing:.08em;color:var(--text3)">Your real estate agent</div>
+          <div style="padding:14px">
+            <div style="display:flex;align-items:center;gap:12px;margin-bottom:11px">
+              <div style="width:42px;height:42px;border-radius:50%;flex-shrink:0;
+                          background:linear-gradient(135deg,#d4231e,#ff6b35);
+                          display:flex;align-items:center;justify-content:center">
+                <span style="font-size:16px;font-weight:700;color:#fff">U</span>
+              </div>
+              <div>
+                <div style="font-size:14px;font-weight:700;color:var(--text)">Umer Ijaz</div>
+                <div style="font-size:11px;color:var(--text3);margin-top:3px;display:flex;align-items:center;gap:6px">
+                  <span style="background:#d4231e;color:#fff;font-size:9px;font-weight:700;
+                               padding:2px 6px;border-radius:3px;letter-spacing:.04em">CENTURY 21</span>
+                  Greater Toronto Area
+                </div>
+              </div>
+            </div>
+            <p style="font-size:11px;color:var(--text2);line-height:1.7;margin:0 0 12px">
+              Specializing in GTA residential real estate. Whether you&apos;re buying your first home or moving up the ladder, Umer can guide you through the market, negotiate on your behalf, and help you close with confidence.
+            </p>
+            <a href="https://www.c21.ca/directory/agents/umer-ijaz" target="_blank" rel="noopener"
+               style="display:flex;align-items:center;justify-content:center;gap:6px;
+                      padding:9px 16px;background:#d4231e;color:#fff;
+                      border-radius:var(--radius);font-size:12px;font-weight:600;
+                      text-decoration:none">
+              <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 8h12M8 2l6 6-6 6"/></svg>
+              View profile on Century 21
+            </a>
+          </div>
+        </div>
+
+        <!-- Built by -->
+        <div style="border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:10px">
+          <div style="padding:9px 14px;background:var(--bg3);
+                      font-size:10px;font-weight:700;text-transform:uppercase;
+                      letter-spacing:.08em;color:var(--text3)">Built by</div>
+          <div style="padding:12px 14px;display:flex;align-items:center;gap:12px">
+            <div style="width:38px;height:38px;border-radius:10px;flex-shrink:0;
+                        background:linear-gradient(135deg,var(--blue),#7c3aed);
+                        display:flex;align-items:center;justify-content:center">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+            </div>
+            <div style="flex:1;min-width:0">
+              <div style="font-size:13px;font-weight:600;color:var(--text)">TechMeka</div>
+              <div style="font-size:11px;color:var(--text3);margin-top:2px">Technology &amp; software development</div>
+            </div>
+            <a href="https://techmeka.com" target="_blank" rel="noopener"
+               style="display:inline-flex;align-items:center;gap:5px;
+                      font-size:11px;font-weight:600;color:var(--blue);text-decoration:none;
+                      padding:6px 12px;border:1.5px solid var(--blue);border-radius:var(--radius);
+                      white-space:nowrap;flex-shrink:0;opacity:.9;transition:opacity .15s"
+               onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='.9'">
+              <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 8h12M8 2l6 6-6 6"/></svg>
+              techmeka.com
+            </a>
+          </div>
+        </div>
+
+
+
+      </div>
+
+      <div class="modal-footer">
+        <div class="modal-footer-left">
+          <button class="btn-clear" onclick="clearAllSettings()">Clear all overrides</button>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="btn-cancel" onclick="closeSettings()">Cancel</button>
+          <button class="btn-apply" onclick="applySettings()">Apply &amp; recalculate</button>
+        </div>
+      </div>
+
+  </div>
+</div>
+
+
+<!-- ── GLOBAL TOOLTIP ──────────────────────────────────── -->
+<div id="global-tip" role="tooltip" aria-live="polite"></div>
+
+
+<!-- ── DISCLAIMER MODAL ─────────────────────────────────── -->
+<div id="disclaimer-overlay">
+  <div id="disclaimer-box" role="dialog" aria-modal="true" aria-labelledby="disc-title">
+    <div class="disc-header">
+      <div class="disc-icon">
+        <svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="var(--amber)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 2L1.5 13h13L8 2z"/><path d="M8 7v3M8 11.5v.5"/></svg>
+      </div>
+      <div>
+        <div class="disc-title" id="disc-title">Before you begin</div>
+        <div class="disc-sub">Housing Feasibility Calculator</div>
+      </div>
+    </div>
+    <div class="disc-body">
+      This tool provides <strong>estimates only</strong> to help you explore home purchase scenarios in the Greater Toronto Area. Please note:
+      <ul>
+        <li>Results are <strong>not financial, mortgage, or legal advice</strong></li>
+        <li>Tax rates, CMHC premiums, and LTT calculations are approximations based on 2024 rules and may not reflect your exact situation</li>
+        <li>Always verify figures with a <strong>licensed mortgage professional</strong> before making any purchase decisions</li>
+        <li>All data entered stays <strong>100% on your device</strong> — nothing is transmitted or stored externally</li>
+      </ul>
+    </div>
+    <div class="disc-footer">
+      <div class="disc-note">Shown once.<br>Won't appear again on this device.</div>
+      <button class="disc-agree" onclick="acceptDisclaimer()">I understand — let's go</button>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

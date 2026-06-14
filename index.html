@@ -675,7 +675,8 @@ html,body{
 .modal-tab.active{color:var(--text);border-bottom-color:var(--blue)}
 .modal-tab svg{flex-shrink:0}
 /* tab panels */
-.modal-body{padding:20px;overflow-y:auto;flex:1}
+.modal-body{padding:20px;overflow-y:auto;flex:1;min-height:0}
+#mpanel-about{overflow-y:auto;margin:-20px;padding:20px}
 .modal-panel{display:none}
 .modal-panel.active{display:block}
 /* override rows — the main pattern */
@@ -1280,69 +1281,65 @@ html,body{
 .disc-note{font-size:10px;color:var(--text3);line-height:1.4}
 
 
-/* ── LIGHT MODE POLISH ───────────────────────────────────── */
-html:not([data-theme="dark"]) .card{
-  box-shadow:var(--shadow-card,none);
-}
-html:not([data-theme="dark"]) .modal{
-  box-shadow:var(--shadow-modal,0 8px 40px rgba(0,0,0,0.22));
-}
-/* stronger topbar separation in light */
-html:not([data-theme="dark"]) .topbar{
-  box-shadow:0 1px 0 var(--border),0 2px 8px rgba(0,0,0,0.05);
-}
-/* left sidebar in light: subtle inner shadow on right edge */
-html:not([data-theme="dark"]) .left{
-  box-shadow:inset -1px 0 0 var(--border);
-}
-/* tabs active indicator stronger in light */
-html:not([data-theme="dark"]) .tab.active{
-  color:var(--blue);
-}
-/* KPI cards: slightly elevated in light */
-html:not([data-theme="dark"]) .kpi{
-  background:var(--bg2);
-  box-shadow:0 1px 2px rgba(0,0,0,0.06);
-}
-/* inputs: clear white wells in light */
-html:not([data-theme="dark"]) .input-wrap input,
-html:not([data-theme="dark"]) .input-wrap select,
-html:not([data-theme="dark"]) .field>input,
-html:not([data-theme="dark"]) .field>select{
-  background:#ffffff;
-  border-color:rgba(0,0,0,0.16);
+/* ── LIGHT MODE POLISH (explicit light only + system-light fallback) ─── */
+/* explicit light theme chosen */
+html[data-theme="light"] .card{ box-shadow:var(--shadow-card,none) }
+html[data-theme="light"] .modal{ box-shadow:var(--shadow-modal,0 8px 40px rgba(0,0,0,0.22)) }
+html[data-theme="light"] .topbar{ box-shadow:0 1px 0 var(--border),0 2px 8px rgba(0,0,0,0.05) }
+html[data-theme="light"] .left{ box-shadow:inset -1px 0 0 var(--border) }
+html[data-theme="light"] .tab.active{ color:var(--blue) }
+html[data-theme="light"] .kpi{ background:var(--bg2);box-shadow:0 1px 2px rgba(0,0,0,0.06) }
+html[data-theme="light"] .input-wrap input,
+html[data-theme="light"] .input-wrap select,
+html[data-theme="light"] .field>input,
+html[data-theme="light"] .field>select{
+  background:#ffffff;border-color:rgba(0,0,0,0.16);
   box-shadow:inset 0 1px 2px rgba(0,0,0,0.05);
 }
-html:not([data-theme="dark"]) .input-wrap input:focus,
-html:not([data-theme="dark"]) .input-wrap select:focus,
-html:not([data-theme="dark"]) .field>input:focus,
-html:not([data-theme="dark"]) .field>select:focus{
+html[data-theme="light"] .input-wrap input:focus,
+html[data-theme="light"] .input-wrap select:focus,
+html[data-theme="light"] .field>input:focus,
+html[data-theme="light"] .field>select:focus{
   border-color:var(--blue);
   box-shadow:inset 0 1px 2px rgba(0,0,0,0.04),0 0 0 3px rgba(21,88,168,0.12);
 }
-/* right panel has a very subtle background in light */
-html:not([data-theme="dark"]) .right{
-  background:var(--bg);
-}
-/* income-grid and savings-grid dividers pop more */
-html:not([data-theme="dark"]) .income-person:first-child,
-html:not([data-theme="dark"]) .savings-person:first-child{
-  background:var(--bg2);
-}
-/* bar fills in light mode — slightly richer colours */
-html:not([data-theme="dark"]) .bar-fill{
-  opacity:0.9;
-}
-/* tab dash KPIs: white cards with border */
-html:not([data-theme="dark"]) .tab-dash-kpi,
-html:not([data-theme="dark"]) .inc-dash-kpi{
-  background:#ffffff;
-  box-shadow:0 1px 3px rgba(0,0,0,0.07),0 0 0 1px rgba(0,0,0,0.06);
-}
-/* mtg stat cards */
-html:not([data-theme="dark"]) .mtg-stat{
-  background:#ffffff;
-  box-shadow:0 1px 3px rgba(0,0,0,0.07),0 0 0 1px rgba(0,0,0,0.06);
+html[data-theme="light"] .right{ background:var(--bg) }
+html[data-theme="light"] .income-person:first-child,
+html[data-theme="light"] .savings-person:first-child{ background:var(--bg2) }
+html[data-theme="light"] .bar-fill{ opacity:0.9 }
+html[data-theme="light"] .tab-dash-kpi,
+html[data-theme="light"] .inc-dash-kpi{ background:#ffffff;box-shadow:0 1px 3px rgba(0,0,0,0.07),0 0 0 1px rgba(0,0,0,0.06) }
+html[data-theme="light"] .mtg-stat{ background:#ffffff;box-shadow:0 1px 3px rgba(0,0,0,0.07),0 0 0 1px rgba(0,0,0,0.06) }
+
+/* system light mode fallback (no data-theme set, OS is light) */
+@media(prefers-color-scheme:light){
+  html:not([data-theme="dark"]) .card{ box-shadow:var(--shadow-card,none) }
+  html:not([data-theme="dark"]) .modal{ box-shadow:var(--shadow-modal,0 8px 40px rgba(0,0,0,0.22)) }
+  html:not([data-theme="dark"]) .topbar{ box-shadow:0 1px 0 var(--border),0 2px 8px rgba(0,0,0,0.05) }
+  html:not([data-theme="dark"]) .left{ box-shadow:inset -1px 0 0 var(--border) }
+  html:not([data-theme="dark"]) .tab.active{ color:var(--blue) }
+  html:not([data-theme="dark"]) .kpi{ background:var(--bg2);box-shadow:0 1px 2px rgba(0,0,0,0.06) }
+  html:not([data-theme="dark"]) .input-wrap input,
+  html:not([data-theme="dark"]) .input-wrap select,
+  html:not([data-theme="dark"]) .field>input,
+  html:not([data-theme="dark"]) .field>select{
+    background:#ffffff;border-color:rgba(0,0,0,0.16);
+    box-shadow:inset 0 1px 2px rgba(0,0,0,0.05);
+  }
+  html:not([data-theme="dark"]) .input-wrap input:focus,
+  html:not([data-theme="dark"]) .input-wrap select:focus,
+  html:not([data-theme="dark"]) .field>input:focus,
+  html:not([data-theme="dark"]) .field>select:focus{
+    border-color:var(--blue);
+    box-shadow:inset 0 1px 2px rgba(0,0,0,0.04),0 0 0 3px rgba(21,88,168,0.12);
+  }
+  html:not([data-theme="dark"]) .right{ background:var(--bg) }
+  html:not([data-theme="dark"]) .income-person:first-child,
+  html:not([data-theme="dark"]) .savings-person:first-child{ background:var(--bg2) }
+  html:not([data-theme="dark"]) .bar-fill{ opacity:0.9 }
+  html:not([data-theme="dark"]) .tab-dash-kpi,
+  html:not([data-theme="dark"]) .inc-dash-kpi{ background:#ffffff;box-shadow:0 1px 3px rgba(0,0,0,0.07),0 0 0 1px rgba(0,0,0,0.06) }
+  html:not([data-theme="dark"]) .mtg-stat{ background:#ffffff;box-shadow:0 1px 3px rgba(0,0,0,0.07),0 0 0 1px rgba(0,0,0,0.06) }
 }
 
 

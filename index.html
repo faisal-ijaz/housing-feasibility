@@ -507,7 +507,17 @@ html,body{
 
   /* tabs scroll horizontally */
   .tabs{overflow-x:auto;-webkit-overflow-scrolling:touch;flex-shrink:0}
-  .tab{padding:9px 12px;white-space:nowrap;font-size:11px}
+  /* mobile tabs: inactive = icon only, active = icon + label */
+  .tabs{justify-content:stretch}
+  .tab{
+    flex:1;flex-direction:column;gap:3px;
+    padding:8px 4px;font-size:10px;
+    justify-content:center;
+  }
+  .tab .tab-label{display:none}
+  .tab.active .tab-label{display:block}
+  .tab.active{flex:none;padding:8px 12px;flex-direction:row;gap:5px}
+  .tab svg{width:16px;height:16px}
 
   /* KPI 2 col on mobile */
   .kpi-grid{grid-template-columns:repeat(2,1fr)}
@@ -647,15 +657,19 @@ html,body{
 /* inner tab nav */
 .modal-tabs{
   display:flex;gap:0;border-bottom:1px solid var(--border);
-  padding:0 20px;margin-top:14px;flex-shrink:0;
+  padding:0 8px;margin-top:14px;flex-shrink:0;
+  overflow-x:auto;-webkit-overflow-scrolling:touch;
+  /* hide scrollbar but keep scrollability */
+  scrollbar-width:none;
 }
+.modal-tabs::-webkit-scrollbar{display:none}
 .modal-tab{
   display:flex;align-items:center;gap:5px;
-  padding:8px 14px;font-size:12px;font-weight:500;
+  padding:8px 10px;font-size:12px;font-weight:500;
   color:var(--text3);background:none;border:none;
   border-bottom:2px solid transparent;margin-bottom:-1px;
   cursor:pointer;font-family:var(--font);transition:color .15s;
-  white-space:nowrap;
+  white-space:nowrap;flex-shrink:0;
 }
 .modal-tab:hover{color:var(--text2)}
 .modal-tab.active{color:var(--text);border-bottom-color:var(--blue)}
@@ -1109,7 +1123,17 @@ html,body{
   .right{overflow:visible}
   .right-inner{padding:14px}
   .tabs{overflow-x:auto;-webkit-overflow-scrolling:touch}
-  .tab{padding:9px 12px;white-space:nowrap;font-size:11px}
+  /* mobile tabs: inactive = icon only, active = icon + label */
+  .tabs{justify-content:stretch}
+  .tab{
+    flex:1;flex-direction:column;gap:3px;
+    padding:8px 4px;font-size:10px;
+    justify-content:center;
+  }
+  .tab .tab-label{display:none}
+  .tab.active .tab-label{display:block}
+  .tab.active{flex:none;padding:8px 12px;flex-direction:row;gap:5px}
+  .tab svg{width:16px;height:16px}
   .kpi-grid{grid-template-columns:repeat(2,1fr)}
   .kpi-value{font-size:18px}
   .dash-grid{grid-template-columns:1fr}
@@ -1156,15 +1180,38 @@ html,body{
   display:flex;align-items:center;
   background:var(--bg3);border:1px solid var(--border2);
   border-radius:20px;padding:2px;gap:1px;
+  cursor:pointer;
+  /* collapsed: only active button visible */
+  overflow:hidden;
+  transition:width .2s ease;
 }
 .theme-btn{
   display:flex;align-items:center;justify-content:center;
   width:26px;height:22px;border-radius:16px;
   background:none;border:none;cursor:pointer;
-  color:var(--text3);transition:all .15s;font-size:11px;
+  color:var(--text3);font-size:11px;flex-shrink:0;
+  /* hide inactive buttons when collapsed */
+  width:0;overflow:hidden;padding:0;
+  transition:width .2s ease, opacity .15s ease;
+  opacity:0;pointer-events:none;
 }
-.theme-btn:hover{color:var(--text)}
-.theme-btn.active{background:var(--bg);color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+/* active button always visible */
+.theme-btn.active{
+  width:26px;opacity:1;pointer-events:auto;
+  color:var(--text);
+  background:var(--bg);box-shadow:0 1px 3px rgba(0,0,0,.12);
+}
+/* expanded: all buttons visible */
+.theme-toggle.expanded .theme-btn{
+  width:26px;opacity:1;pointer-events:auto;
+  color:var(--text3);
+  background:none;box-shadow:none;
+}
+.theme-toggle.expanded .theme-btn.active{
+  color:var(--text);
+  background:var(--bg);box-shadow:0 1px 3px rgba(0,0,0,.12);
+}
+.theme-toggle.expanded .theme-btn:hover{color:var(--text)}
 
 
 /* hide settings-action footer when About tab is open */
@@ -1327,14 +1374,14 @@ html:not([data-theme="dark"]) .mtg-stat{
       <div class="save-dot" id="saveDot"></div>
       <span id="saveLabel">Saved</span>
     </div>
-    <div class="theme-toggle" role="group" aria-label="Color theme">
-      <button class="theme-btn" id="theme-system" onclick="setTheme('system')" title="System default">
+    <div class="theme-toggle" id="themeToggle" role="group" aria-label="Color theme">
+      <button class="theme-btn" id="theme-system" onclick="themeClick(event,'system')" title="System default">
         <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><rect x="1" y="3" width="14" height="10" rx="1.5"/><path d="M5 13v1.5M11 13v1.5M3 14.5h10"/></svg>
       </button>
-      <button class="theme-btn" id="theme-light" onclick="setTheme('light')" title="Light mode">
+      <button class="theme-btn" id="theme-light" onclick="themeClick(event,'light')" title="Light mode">
         <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><circle cx="8" cy="8" r="3"/><path d="M8 1v1.5M8 13.5V15M1 8h1.5M13.5 8H15M3.2 3.2l1.1 1.1M11.7 11.7l1.1 1.1M3.2 12.8l1.1-1.1M11.7 4.3l1.1-1.1"/></svg>
       </button>
-      <button class="theme-btn" id="theme-dark" onclick="setTheme('dark')" title="Dark mode">
+      <button class="theme-btn" id="theme-dark" onclick="themeClick(event,'dark')" title="Dark mode">
         <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><path d="M12.5 9.5A5.5 5.5 0 0 1 6.5 3.5a5.5 5.5 0 1 0 6 6z"/></svg>
       </button>
     </div>
@@ -1484,23 +1531,23 @@ html:not([data-theme="dark"]) .mtg-stat{
       <div class="tabs">
         <button class="tab active" onclick="showTab('dashboard',this)">
           <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="2" width="5" height="5" rx="1"/><rect x="9" y="2" width="5" height="5" rx="1"/><rect x="2" y="9" width="5" height="5" rx="1"/><rect x="9" y="9" width="5" height="5" rx="1"/></svg>
-          Dashboard
+          <span class="tab-label">Dashboard</span>
         </button>
         <button class="tab" onclick="showTab('income',this)">
           <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="5" width="12" height="9" rx="1.5"/><path d="M5 5V4a3 3 0 0 1 6 0v1"/></svg>
-          Income
+          <span class="tab-label">Income</span>
         </button>
         <button class="tab" onclick="showTab('property',this)">
           <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 7L8 2l6 5v7a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V7z"/><path d="M6 14V9h4v5"/></svg>
-          Property
+          <span class="tab-label">Property</span>
         </button>
         <button class="tab" onclick="showTab('expenses',this)">
           <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="2" width="10" height="13" rx="1.5"/><path d="M6 6h4M6 9h4M6 12h2"/></svg>
-          Expenses
+          <span class="tab-label">Expenses</span>
         </button>
         <button class="tab" onclick="showTab('mortgage',this)">
           <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 13V6.5L8 3l6 3.5V13"/><rect x="5" y="8" width="6" height="5" rx=".5"/><path d="M8 8v5"/></svg>
-          Mortgage
+          <span class="tab-label">Mortgage</span>
         </button>
       </div>
 
@@ -2964,11 +3011,37 @@ function buildMortgageTab(principal, er, monthly, amort, rate, hp) {
 
 
 // ── Theme management ─────────────────────────────────────────────────────
+let _themeCollapseTimer = null;
+
+// Called by each theme button
+window.themeClick = function(e, mode) {
+  e.stopPropagation();
+  const pill = document.getElementById('themeToggle');
+  if (!pill) return;
+
+  const expanded = pill.classList.contains('expanded');
+
+  if (!expanded) {
+    // Collapsed → expand to show all options
+    pill.classList.add('expanded');
+    clearTimeout(_themeCollapseTimer);
+    _themeCollapseTimer = setTimeout(() => {
+      pill.classList.remove('expanded');
+    }, 2000);
+    return;
+  }
+
+  // Already expanded — pick the mode, collapse
+  setTheme(mode);
+  pill.classList.remove('expanded');
+  clearTimeout(_themeCollapseTimer);
+};
+
 window.setTheme = function(mode) {
   const html = document.documentElement;
   if (mode === 'dark')        html.setAttribute('data-theme', 'dark');
   else if (mode === 'light')  html.setAttribute('data-theme', 'light');
-  else                         html.removeAttribute('data-theme');  // system
+  else                         html.removeAttribute('data-theme');
   localStorage.setItem('theme', mode);
   updateThemeButtons(mode);
 };

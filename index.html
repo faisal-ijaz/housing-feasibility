@@ -1386,6 +1386,11 @@ html[data-theme="light"] .mtg-stat{ background:#ffffff;box-shadow:0 1px 3px rgba
 }
 
 </style>
+<script>
+// Synchronous theme init — prevents flash of wrong theme before main script loads.
+// Mirrors setTheme() in the main script: 'dark'/'light' set data-theme; 'system' (or unset) removes it.
+(function(){try{var t=localStorage.getItem('theme');if(t==='dark'||t==='light')document.documentElement.setAttribute('data-theme',t);}catch(e){}})();
+</script>
 </head>
 <body>
 
@@ -2176,6 +2181,463 @@ html[data-theme="light"] .mtg-stat{ background:#ffffff;box-shadow:0 1px 3px rgba
   </div><!-- /right -->
 
 </div><!-- /app -->
+
+
+<!-- ── SETTINGS MODAL ────────────────────────────────────── -->
+<div class="modal-overlay" id="settingsOverlay" onclick="overlayClick(event)">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+
+    <div class="modal-header">
+      <div>
+        <div class="modal-title" id="modalTitle">Adjust assumptions</div>
+        <div class="modal-subtitle">These values are estimated automatically — change any to override</div>
+      </div>
+      <button class="btn-close" onclick="closeSettings()" aria-label="Close">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M2 2l10 10M12 2L2 12"/></svg>
+      </button>
+    </div>
+
+    <div class="modal-tabs">
+      <button class="modal-tab active" onclick="switchModalTab('prop',this)">
+        <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 7L8 2l6 5v7a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1z"/><path d="M6 14V9h4v5"/></svg>
+        Property
+      </button>
+      <button class="modal-tab" onclick="switchModalTab('mtg',this)">
+        <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="4" width="12" height="9" rx="1.5"/><path d="M5 4V3a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v1M8 8v2"/></svg>
+        Mortgage
+      </button>
+      <button class="modal-tab" onclick="switchModalTab('util',this)">
+        <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 2v3M12.2 3.8l-2.1 2.1M14 8h-3M12.2 12.2l-2.1-2.1M8 14v-3M3.8 12.2l2.1-2.1M2 8h3M3.8 3.8l2.1 2.1"/><circle cx="8" cy="8" r="2"/></svg>
+        Utilities
+      </button>
+      <button class="modal-tab" onclick="switchModalTab('tax',this)">
+        <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="5" width="12" height="9" rx="1.5"/><path d="M5 5V4a3 3 0 0 1 6 0v1"/></svg>
+        Income &amp; Tax
+      </button>
+      <button class="modal-tab" onclick="switchModalTab('about',this)">
+        <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="8" r="5.5"/><path d="M8 7v4M8 5.5v.5"/></svg>
+        About
+      </button>
+    </div>
+
+    <div class="modal-body">
+
+      <!-- ── PROPERTY PANEL ── -->
+      <div class="modal-panel active" id="mpanel-prop">
+
+        <div class="panel-section">
+          <div class="panel-section-label">
+            <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><circle cx="8" cy="8" r="5.5"/><path d="M8 6v4M8 5h.01"/></svg>
+            Property tax
+          </div>
+        </div>
+
+        <div class="override-row">
+          <div>
+            <div class="override-label">Tax rate</div>
+            <div class="override-desc">Annual % of assessed value used to calculate property tax</div>
+          </div>
+          <div class="override-auto"><span class="auto-tag" id="s_ptr_tag">AUTO</span><span id="s_ptr_auto">—</span></div>
+          <div class="override-input">
+            <input type="number" id="s_ptr" step="0.01" placeholder="e.g. 0.63" oninput="markOverride(this,'s_ptr_tag')">
+          </div>
+        </div>
+
+        <div class="override-row">
+          <div>
+            <div class="override-label">Assessed value</div>
+            <div class="override-desc">MPAC assessed value if different from purchase price</div>
+          </div>
+          <div class="override-auto"><span class="auto-tag">AUTO</span>= purchase price</div>
+          <div class="override-input">
+            <input type="number" id="s_assessed" placeholder="e.g. 850,000" oninput="markOverride(this,null)">
+          </div>
+        </div>
+
+        <div class="panel-section" style="margin-top:20px">
+          <div class="panel-section-label">
+            <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M3 13V6l5-3.5L13 6v7"/><rect x="6" y="9" width="4" height="4"/></svg>
+            Maintenance reserve
+          </div>
+        </div>
+
+        <div class="override-row">
+          <div>
+            <div class="override-label">Annual reserve rate</div>
+            <div class="override-desc">Set aside each month for repairs (roof, HVAC, appliances)</div>
+          </div>
+          <div class="override-auto"><span class="auto-tag">AUTO</span>1% p.a.</div>
+          <div class="override-input">
+            <select id="s_maint_pct" onchange="toggleMaintCustom()">
+              <option value="0.01">1% per year</option>
+              <option value="0.015">1.5% per year</option>
+              <option value="0.02">2% per year</option>
+              <option value="custom">Custom $</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="override-row" id="s_maint_custom_wrap" style="display:none">
+          <div>
+            <div class="override-label">Custom monthly amount</div>
+            <div class="override-desc">Fixed monthly maintenance budget</div>
+          </div>
+          <div class="override-auto"></div>
+          <div class="override-input">
+            <input type="number" id="s_maint_custom" placeholder="e.g. 600">
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ── MORTGAGE PANEL ── -->
+      <div class="modal-panel" id="mpanel-mtg">
+
+        <div class="panel-section">
+          <div class="panel-section-label">
+            <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M3 13V6l5-3.5L13 6v7"/></svg>
+            Payment structure
+          </div>
+        </div>
+
+        <div class="override-row">
+          <div>
+            <div class="override-label">Payment frequency</div>
+            <div class="override-desc">How often you make mortgage payments — bi-weekly saves interest</div>
+          </div>
+          <div class="override-auto"><span class="auto-tag">AUTO</span>Monthly</div>
+          <div class="override-input">
+            <select id="s_freq">
+              <option value="12">Monthly</option>
+              <option value="24">Semi-monthly</option>
+              <option value="26">Bi-weekly</option>
+              <option value="52">Weekly</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="override-row">
+          <div>
+            <div class="override-label">Compounding convention</div>
+            <div class="override-desc">Canadian mortgages compound semi-annually by law</div>
+          </div>
+          <div class="override-auto"><span class="auto-tag">AUTO</span>Semi-annual</div>
+          <div class="override-input">
+            <select id="s_compound">
+              <option value="2">Semi-annual (Canada)</option>
+              <option value="12">Monthly (US-style)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="panel-section" style="margin-top:20px">
+          <div class="panel-section-label">
+            <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><circle cx="8" cy="8" r="5.5"/><path d="M8 5v3.5L10.5 10"/></svg>
+            Scenario planning
+          </div>
+        </div>
+
+        <div class="override-row">
+          <div>
+            <div class="override-label">Renewal rate (year 6+)</div>
+            <div class="override-desc">Expected rate when your 5-year term renews — shown in Mortgage tab</div>
+          </div>
+          <div class="override-auto"><span class="auto-tag">OPTIONAL</span></div>
+          <div class="override-input">
+            <input type="number" id="s_renewrate" step="0.01" placeholder="e.g. 5.50">
+          </div>
+        </div>
+
+        <div class="override-row">
+          <div>
+            <div class="override-label">Annual lump-sum prepayment</div>
+            <div class="override-desc">Extra payment per year reduces principal and shortens amortization</div>
+          </div>
+          <div class="override-auto"><span class="auto-tag">OPTIONAL</span></div>
+          <div class="override-input">
+            <input type="number" id="s_prepay" placeholder="e.g. 5,000">
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ── UTILITIES PANEL ── -->
+      <div class="modal-panel" id="mpanel-util">
+
+        <div class="panel-section">
+          <div class="panel-section-label">
+            <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M8 2v3M12.2 3.8l-2.1 2.1M14 8h-3M12.2 12.2l-2.1-2.1M8 14v-3M3.8 12.2l2.1 2.1M2 8h3M3.8 3.8l2.1 2.1"/><circle cx="8" cy="8" r="2"/></svg>
+            Monthly utility costs — pre-filled from your region average
+          </div>
+        </div>
+
+        <div class="override-row">
+          <div>
+            <div class="override-label">Home insurance</div>
+            <div class="override-desc">Monthly premium for your home and contents</div>
+          </div>
+          <div class="override-auto"><span class="auto-tag" id="s_ins_tag">AUTO</span><span id="s_ins_hint">—</span></div>
+          <div class="override-input">
+            <input type="number" id="s_ins" placeholder="e.g. 220" oninput="markOverride(this,'s_ins_tag')">
+          </div>
+        </div>
+
+        <div class="override-row">
+          <div>
+            <div class="override-label">Hydro (electricity)</div>
+            <div class="override-desc">Varies by home size and season — electric heat adds significantly</div>
+          </div>
+          <div class="override-auto"><span class="auto-tag" id="s_hydro_tag">AUTO</span><span id="s_hydro_hint">—</span></div>
+          <div class="override-input">
+            <input type="number" id="s_hydro" placeholder="e.g. 155" oninput="markOverride(this,'s_hydro_tag')">
+          </div>
+        </div>
+
+        <div class="override-row">
+          <div>
+            <div class="override-label">Gas / heat</div>
+            <div class="override-desc">Natural gas for forced-air heating — higher in winter</div>
+          </div>
+          <div class="override-auto"><span class="auto-tag" id="s_gas_tag">AUTO</span><span id="s_gas_hint">—</span></div>
+          <div class="override-input">
+            <input type="number" id="s_gas" placeholder="e.g. 140" oninput="markOverride(this,'s_gas_tag')">
+          </div>
+        </div>
+
+        <div class="override-row">
+          <div>
+            <div class="override-label">Water</div>
+            <div class="override-desc">Municipal water and sewer — billed quarterly in most GTA cities</div>
+          </div>
+          <div class="override-auto"><span class="auto-tag" id="s_water_tag">AUTO</span><span id="s_water_hint">—</span></div>
+          <div class="override-input">
+            <input type="number" id="s_water" placeholder="e.g. 65" oninput="markOverride(this,'s_water_tag')">
+          </div>
+        </div>
+
+        <div class="override-row">
+          <div>
+            <div class="override-label">Internet / phone</div>
+            <div class="override-desc">Home internet plus mobile plan(s)</div>
+          </div>
+          <div class="override-auto"><span class="auto-tag" id="s_internet_tag">AUTO</span><span id="s_internet_hint">—</span></div>
+          <div class="override-input">
+            <input type="number" id="s_internet" placeholder="e.g. 160" oninput="markOverride(this,'s_internet_tag')">
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ── TAX PANEL ── -->
+      <div class="modal-panel" id="mpanel-tax">
+
+        <div class="panel-section">
+          <div class="panel-section-label">
+            <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><rect x="2" y="5" width="12" height="9" rx="1.5"/><path d="M5 5V4a3 3 0 0 1 6 0v1"/></svg>
+            Income tax rates
+          </div>
+        </div>
+
+        <div class="override-row">
+          <div>
+            <div class="override-label">Person 1 — effective tax rate</div>
+            <div class="override-desc">Combined federal + Ontario marginal rate on employment income</div>
+          </div>
+          <div class="override-auto"><span class="auto-tag">DEFAULT</span>33%</div>
+          <div class="override-input">
+            <input type="number" id="s_p1tax" placeholder="33" step="0.5">
+          </div>
+        </div>
+
+        <div class="override-row">
+          <div>
+            <div class="override-label">Person 2 — effective tax rate</div>
+            <div class="override-desc">Combined rate for self-employment / contract income</div>
+          </div>
+          <div class="override-auto"><span class="auto-tag">DEFAULT</span>28%</div>
+          <div class="override-input">
+            <input type="number" id="s_p2tax" placeholder="28" step="0.5">
+          </div>
+        </div>
+
+        <div class="panel-section" style="margin-top:20px">
+          <div class="panel-section-label">
+            <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><circle cx="8" cy="8" r="5.5"/><path d="M8 6v4M8 5h.01"/></svg>
+            CPP — Canada Pension Plan (Person 2)
+          </div>
+        </div>
+
+        <div class="override-row">
+          <div>
+            <div class="override-label">Self-employment CPP rate</div>
+            <div class="override-desc">Self-employed pay both employee + employer share (~11.88%)</div>
+          </div>
+          <div class="override-auto"><span class="auto-tag">DEFAULT</span>11.88%</div>
+          <div class="override-input">
+            <input type="number" id="s_cpp" placeholder="11.88" step="0.01">
+          </div>
+        </div>
+
+        <div class="override-row">
+          <div>
+            <div class="override-label">CPP annual maximum</div>
+            <div class="override-desc">Contribution caps at this amount regardless of income</div>
+          </div>
+          <div class="override-auto"><span class="auto-tag">DEFAULT</span>$8,068</div>
+          <div class="override-input">
+            <input type="number" id="s_cpp_cap" placeholder="8068">
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+      <!-- ── ABOUT PANEL ── -->
+      <div class="modal-panel" id="mpanel-about">
+
+        <!-- App header -->
+        <div style="text-align:center;padding:20px 0 16px;border-bottom:1px solid var(--border)">
+          <div style="width:48px;height:48px;border-radius:12px;background:var(--blue);
+                      display:flex;align-items:center;justify-content:center;margin:0 auto 10px">
+            <svg width="24" height="24" viewBox="0 0 16 16" fill="none" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 7L8 2l6 5v7a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1z"/><path d="M6 14V9h4v5"/></svg>
+          </div>
+          <div style="font-size:16px;font-weight:700;color:var(--text);letter-spacing:-.3px">Housing Feasibility</div>
+          <div style="font-size:11px;color:var(--text3);margin-top:3px">GTA home purchase calculator &middot; Ontario &amp; Federal tax math</div>
+          <div style="font-size:10px;color:var(--text3);margin-top:4px;opacity:.8">Estimates only &middot; Not financial or legal advice</div>
+          <div style="display:flex;flex-wrap:wrap;gap:5px;justify-content:center;margin-top:10px">
+            <span style="font-size:10px;padding:3px 8px;border-radius:10px;background:var(--bg3);color:var(--text2)">CMHC</span>
+            <span style="font-size:10px;padding:3px 8px;border-radius:10px;background:var(--bg3);color:var(--text2)">LTT + rebates</span>
+            <span style="font-size:10px;padding:3px 8px;border-radius:10px;background:var(--bg3);color:var(--text2)">Stress test</span>
+            <span style="font-size:10px;padding:3px 8px;border-radius:10px;background:var(--bg3);color:var(--text2)">Multi-income</span>
+            <span style="font-size:10px;padding:3px 8px;border-radius:10px;background:var(--bg3);color:var(--text2)">Self-employed</span>
+            <span style="font-size:10px;padding:3px 8px;border-radius:10px;background:var(--bg3);color:var(--text2)">GDS / TDS</span>
+          </div>
+        </div>
+
+        <!-- Privacy — above Umer -->
+        <div style="display:flex;align-items:flex-start;gap:10px;
+                    margin:12px 0;padding:11px 13px;
+                    background:var(--green-bg);border-radius:var(--radius);
+                    border:1px solid rgba(74,222,128,0.18)">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="var(--green)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:1px"><rect x="3" y="7" width="10" height="8" rx="1.5"/><path d="M5 7V5a3 3 0 0 1 6 0v2"/></svg>
+          <div style="font-size:11px;color:var(--text2);line-height:1.6">
+            <strong style="color:var(--text)">100% private &amp; local.</strong>
+            Runs entirely in your browser — no servers, no accounts, no analytics. Your numbers never leave your device. Data persists in <code style="font-family:var(--mono);font-size:10px;background:var(--bg3);padding:1px 4px;border-radius:3px">localStorage</code>; use incognito or hit Reset to clear.
+          </div>
+        </div>
+
+        <!-- Umer Ijaz -->
+        <div style="border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:12px">
+          <div style="padding:9px 14px;background:var(--bg3);
+                      font-size:10px;font-weight:700;text-transform:uppercase;
+                      letter-spacing:.08em;color:var(--text3)">Your real estate agent</div>
+          <div style="padding:14px">
+            <div style="display:flex;align-items:center;gap:12px;margin-bottom:11px">
+              <div style="width:42px;height:42px;border-radius:50%;flex-shrink:0;
+                          background:linear-gradient(135deg,#d4231e,#ff6b35);
+                          display:flex;align-items:center;justify-content:center">
+                <span style="font-size:16px;font-weight:700;color:#fff">U</span>
+              </div>
+              <div>
+                <div style="font-size:14px;font-weight:700;color:var(--text)">Umer Ijaz</div>
+                <div style="font-size:11px;color:var(--text3);margin-top:3px;display:flex;align-items:center;gap:6px">
+                  <span style="background:#d4231e;color:#fff;font-size:9px;font-weight:700;
+                               padding:2px 6px;border-radius:3px;letter-spacing:.04em">CENTURY 21</span>
+                  Greater Toronto Area
+                </div>
+              </div>
+            </div>
+            <p style="font-size:11px;color:var(--text2);line-height:1.7;margin:0 0 12px">
+              Specializing in GTA residential real estate. Whether you&apos;re buying your first home or moving up the ladder, Umer can guide you through the market, negotiate on your behalf, and help you close with confidence.
+            </p>
+            <a href="https://www.c21.ca/directory/agents/umer-ijaz" target="_blank" rel="noopener"
+               style="display:flex;align-items:center;justify-content:center;gap:6px;
+                      padding:9px 16px;background:#d4231e;color:#fff;
+                      border-radius:var(--radius);font-size:12px;font-weight:600;
+                      text-decoration:none">
+              <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 8h12M8 2l6 6-6 6"/></svg>
+              View profile on Century 21
+            </a>
+          </div>
+        </div>
+
+        <!-- Built by -->
+        <div style="border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:10px">
+          <div style="padding:9px 14px;background:var(--bg3);
+                      font-size:10px;font-weight:700;text-transform:uppercase;
+                      letter-spacing:.08em;color:var(--text3)">Built by</div>
+          <div style="padding:12px 14px;display:flex;align-items:center;gap:12px">
+            <div style="width:38px;height:38px;border-radius:10px;flex-shrink:0;
+                        background:linear-gradient(135deg,var(--blue),#7c3aed);
+                        display:flex;align-items:center;justify-content:center">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+            </div>
+            <div style="flex:1;min-width:0">
+              <div style="font-size:13px;font-weight:600;color:var(--text)">TechMeka</div>
+              <div style="font-size:11px;color:var(--text3);margin-top:2px">Technology &amp; software development</div>
+            </div>
+            <a href="https://techmeka.com" target="_blank" rel="noopener"
+               style="display:inline-flex;align-items:center;gap:5px;
+                      font-size:11px;font-weight:600;color:var(--blue);text-decoration:none;
+                      padding:6px 12px;border:1.5px solid var(--blue);border-radius:var(--radius);
+                      white-space:nowrap;flex-shrink:0;opacity:.9;transition:opacity .15s"
+               onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='.9'">
+              <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 8h12M8 2l6 6-6 6"/></svg>
+              techmeka.com
+            </a>
+          </div>
+        </div>
+
+
+
+      </div>
+
+      <div class="modal-footer">
+        <div class="modal-footer-left">
+          <button class="btn-clear" onclick="clearAllSettings()">Clear all overrides</button>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="btn-cancel" onclick="closeSettings()">Cancel</button>
+          <button class="btn-apply" onclick="applySettings()">Apply &amp; recalculate</button>
+        </div>
+      </div>
+
+  </div>
+</div>
+
+
+<!-- ── GLOBAL TOOLTIP ──────────────────────────────────── -->
+<div id="global-tip" role="tooltip" aria-live="polite"></div>
+
+
+<!-- ── DISCLAIMER MODAL ─────────────────────────────────── -->
+<div id="disclaimer-overlay">
+  <div id="disclaimer-box" role="dialog" aria-modal="true" aria-labelledby="disc-title">
+    <div class="disc-header">
+      <div class="disc-icon">
+        <svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="var(--amber)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 2L1.5 13h13L8 2z"/><path d="M8 7v3M8 11.5v.5"/></svg>
+      </div>
+      <div>
+        <div class="disc-title" id="disc-title">Before you begin</div>
+        <div class="disc-sub">Housing Feasibility Calculator</div>
+      </div>
+    </div>
+    <div class="disc-body">
+      This tool provides <strong>estimates only</strong> to help you explore home purchase scenarios in the Greater Toronto Area. Please note:
+      <ul>
+        <li>Results are <strong>not financial, mortgage, or legal advice</strong></li>
+        <li>Tax rates, CMHC premiums, and LTT calculations are approximations based on 2024 rules and may not reflect your exact situation</li>
+        <li>Always verify figures with a <strong>licensed mortgage professional</strong> before making any purchase decisions</li>
+        <li>All data entered stays <strong>100% on your device</strong> — nothing is transmitted or stored externally</li>
+      </ul>
+    </div>
+    <div class="disc-footer">
+      <div class="disc-note">Shown once.<br>Won't appear again on this device.</div>
+      <button class="disc-agree" onclick="acceptDisclaimer()">I understand — let's go</button>
+    </div>
+  </div>
+</div>
 
 <script>
 // ── Settings state ────────────────────────────────────────────────────────
@@ -3319,462 +3781,6 @@ document.addEventListener('click', function(e) {
 });
 
 </script>
-
-<!-- ── SETTINGS MODAL ────────────────────────────────────── -->
-<div class="modal-overlay" id="settingsOverlay" onclick="overlayClick(event)">
-  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
-
-    <div class="modal-header">
-      <div>
-        <div class="modal-title" id="modalTitle">Adjust assumptions</div>
-        <div class="modal-subtitle">These values are estimated automatically — change any to override</div>
-      </div>
-      <button class="btn-close" onclick="closeSettings()" aria-label="Close">
-        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M2 2l10 10M12 2L2 12"/></svg>
-      </button>
-    </div>
-
-    <div class="modal-tabs">
-      <button class="modal-tab active" onclick="switchModalTab('prop',this)">
-        <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 7L8 2l6 5v7a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1z"/><path d="M6 14V9h4v5"/></svg>
-        Property
-      </button>
-      <button class="modal-tab" onclick="switchModalTab('mtg',this)">
-        <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="4" width="12" height="9" rx="1.5"/><path d="M5 4V3a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v1M8 8v2"/></svg>
-        Mortgage
-      </button>
-      <button class="modal-tab" onclick="switchModalTab('util',this)">
-        <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 2v3M12.2 3.8l-2.1 2.1M14 8h-3M12.2 12.2l-2.1-2.1M8 14v-3M3.8 12.2l2.1-2.1M2 8h3M3.8 3.8l2.1 2.1"/><circle cx="8" cy="8" r="2"/></svg>
-        Utilities
-      </button>
-      <button class="modal-tab" onclick="switchModalTab('tax',this)">
-        <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="5" width="12" height="9" rx="1.5"/><path d="M5 5V4a3 3 0 0 1 6 0v1"/></svg>
-        Income &amp; Tax
-      </button>
-      <button class="modal-tab" onclick="switchModalTab('about',this)">
-        <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="8" r="5.5"/><path d="M8 7v4M8 5.5v.5"/></svg>
-        About
-      </button>
-    </div>
-
-    <div class="modal-body">
-
-      <!-- ── PROPERTY PANEL ── -->
-      <div class="modal-panel active" id="mpanel-prop">
-
-        <div class="panel-section">
-          <div class="panel-section-label">
-            <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><circle cx="8" cy="8" r="5.5"/><path d="M8 6v4M8 5h.01"/></svg>
-            Property tax
-          </div>
-        </div>
-
-        <div class="override-row">
-          <div>
-            <div class="override-label">Tax rate</div>
-            <div class="override-desc">Annual % of assessed value used to calculate property tax</div>
-          </div>
-          <div class="override-auto"><span class="auto-tag" id="s_ptr_tag">AUTO</span><span id="s_ptr_auto">—</span></div>
-          <div class="override-input">
-            <input type="number" id="s_ptr" step="0.01" placeholder="e.g. 0.63" oninput="markOverride(this,'s_ptr_tag')">
-          </div>
-        </div>
-
-        <div class="override-row">
-          <div>
-            <div class="override-label">Assessed value</div>
-            <div class="override-desc">MPAC assessed value if different from purchase price</div>
-          </div>
-          <div class="override-auto"><span class="auto-tag">AUTO</span>= purchase price</div>
-          <div class="override-input">
-            <input type="number" id="s_assessed" placeholder="e.g. 850,000" oninput="markOverride(this,null)">
-          </div>
-        </div>
-
-        <div class="panel-section" style="margin-top:20px">
-          <div class="panel-section-label">
-            <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M3 13V6l5-3.5L13 6v7"/><rect x="6" y="9" width="4" height="4"/></svg>
-            Maintenance reserve
-          </div>
-        </div>
-
-        <div class="override-row">
-          <div>
-            <div class="override-label">Annual reserve rate</div>
-            <div class="override-desc">Set aside each month for repairs (roof, HVAC, appliances)</div>
-          </div>
-          <div class="override-auto"><span class="auto-tag">AUTO</span>1% p.a.</div>
-          <div class="override-input">
-            <select id="s_maint_pct" onchange="toggleMaintCustom()">
-              <option value="0.01">1% per year</option>
-              <option value="0.015">1.5% per year</option>
-              <option value="0.02">2% per year</option>
-              <option value="custom">Custom $</option>
-            </select>
-          </div>
-        </div>
-
-        <div class="override-row" id="s_maint_custom_wrap" style="display:none">
-          <div>
-            <div class="override-label">Custom monthly amount</div>
-            <div class="override-desc">Fixed monthly maintenance budget</div>
-          </div>
-          <div class="override-auto"></div>
-          <div class="override-input">
-            <input type="number" id="s_maint_custom" placeholder="e.g. 600">
-          </div>
-        </div>
-
-      </div>
-
-      <!-- ── MORTGAGE PANEL ── -->
-      <div class="modal-panel" id="mpanel-mtg">
-
-        <div class="panel-section">
-          <div class="panel-section-label">
-            <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M3 13V6l5-3.5L13 6v7"/></svg>
-            Payment structure
-          </div>
-        </div>
-
-        <div class="override-row">
-          <div>
-            <div class="override-label">Payment frequency</div>
-            <div class="override-desc">How often you make mortgage payments — bi-weekly saves interest</div>
-          </div>
-          <div class="override-auto"><span class="auto-tag">AUTO</span>Monthly</div>
-          <div class="override-input">
-            <select id="s_freq">
-              <option value="12">Monthly</option>
-              <option value="24">Semi-monthly</option>
-              <option value="26">Bi-weekly</option>
-              <option value="52">Weekly</option>
-            </select>
-          </div>
-        </div>
-
-        <div class="override-row">
-          <div>
-            <div class="override-label">Compounding convention</div>
-            <div class="override-desc">Canadian mortgages compound semi-annually by law</div>
-          </div>
-          <div class="override-auto"><span class="auto-tag">AUTO</span>Semi-annual</div>
-          <div class="override-input">
-            <select id="s_compound">
-              <option value="2">Semi-annual (Canada)</option>
-              <option value="12">Monthly (US-style)</option>
-            </select>
-          </div>
-        </div>
-
-        <div class="panel-section" style="margin-top:20px">
-          <div class="panel-section-label">
-            <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><circle cx="8" cy="8" r="5.5"/><path d="M8 5v3.5L10.5 10"/></svg>
-            Scenario planning
-          </div>
-        </div>
-
-        <div class="override-row">
-          <div>
-            <div class="override-label">Renewal rate (year 6+)</div>
-            <div class="override-desc">Expected rate when your 5-year term renews — shown in Mortgage tab</div>
-          </div>
-          <div class="override-auto"><span class="auto-tag">OPTIONAL</span></div>
-          <div class="override-input">
-            <input type="number" id="s_renewrate" step="0.01" placeholder="e.g. 5.50">
-          </div>
-        </div>
-
-        <div class="override-row">
-          <div>
-            <div class="override-label">Annual lump-sum prepayment</div>
-            <div class="override-desc">Extra payment per year reduces principal and shortens amortization</div>
-          </div>
-          <div class="override-auto"><span class="auto-tag">OPTIONAL</span></div>
-          <div class="override-input">
-            <input type="number" id="s_prepay" placeholder="e.g. 5,000">
-          </div>
-        </div>
-
-      </div>
-
-      <!-- ── UTILITIES PANEL ── -->
-      <div class="modal-panel" id="mpanel-util">
-
-        <div class="panel-section">
-          <div class="panel-section-label">
-            <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M8 2v3M12.2 3.8l-2.1 2.1M14 8h-3M12.2 12.2l-2.1-2.1M8 14v-3M3.8 12.2l2.1 2.1M2 8h3M3.8 3.8l2.1 2.1"/><circle cx="8" cy="8" r="2"/></svg>
-            Monthly utility costs — pre-filled from your region average
-          </div>
-        </div>
-
-        <div class="override-row">
-          <div>
-            <div class="override-label">Home insurance</div>
-            <div class="override-desc">Monthly premium for your home and contents</div>
-          </div>
-          <div class="override-auto"><span class="auto-tag" id="s_ins_tag">AUTO</span><span id="s_ins_hint">—</span></div>
-          <div class="override-input">
-            <input type="number" id="s_ins" placeholder="e.g. 220" oninput="markOverride(this,'s_ins_tag')">
-          </div>
-        </div>
-
-        <div class="override-row">
-          <div>
-            <div class="override-label">Hydro (electricity)</div>
-            <div class="override-desc">Varies by home size and season — electric heat adds significantly</div>
-          </div>
-          <div class="override-auto"><span class="auto-tag" id="s_hydro_tag">AUTO</span><span id="s_hydro_hint">—</span></div>
-          <div class="override-input">
-            <input type="number" id="s_hydro" placeholder="e.g. 155" oninput="markOverride(this,'s_hydro_tag')">
-          </div>
-        </div>
-
-        <div class="override-row">
-          <div>
-            <div class="override-label">Gas / heat</div>
-            <div class="override-desc">Natural gas for forced-air heating — higher in winter</div>
-          </div>
-          <div class="override-auto"><span class="auto-tag" id="s_gas_tag">AUTO</span><span id="s_gas_hint">—</span></div>
-          <div class="override-input">
-            <input type="number" id="s_gas" placeholder="e.g. 140" oninput="markOverride(this,'s_gas_tag')">
-          </div>
-        </div>
-
-        <div class="override-row">
-          <div>
-            <div class="override-label">Water</div>
-            <div class="override-desc">Municipal water and sewer — billed quarterly in most GTA cities</div>
-          </div>
-          <div class="override-auto"><span class="auto-tag" id="s_water_tag">AUTO</span><span id="s_water_hint">—</span></div>
-          <div class="override-input">
-            <input type="number" id="s_water" placeholder="e.g. 65" oninput="markOverride(this,'s_water_tag')">
-          </div>
-        </div>
-
-        <div class="override-row">
-          <div>
-            <div class="override-label">Internet / phone</div>
-            <div class="override-desc">Home internet plus mobile plan(s)</div>
-          </div>
-          <div class="override-auto"><span class="auto-tag" id="s_internet_tag">AUTO</span><span id="s_internet_hint">—</span></div>
-          <div class="override-input">
-            <input type="number" id="s_internet" placeholder="e.g. 160" oninput="markOverride(this,'s_internet_tag')">
-          </div>
-        </div>
-
-      </div>
-
-      <!-- ── TAX PANEL ── -->
-      <div class="modal-panel" id="mpanel-tax">
-
-        <div class="panel-section">
-          <div class="panel-section-label">
-            <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><rect x="2" y="5" width="12" height="9" rx="1.5"/><path d="M5 5V4a3 3 0 0 1 6 0v1"/></svg>
-            Income tax rates
-          </div>
-        </div>
-
-        <div class="override-row">
-          <div>
-            <div class="override-label">Person 1 — effective tax rate</div>
-            <div class="override-desc">Combined federal + Ontario marginal rate on employment income</div>
-          </div>
-          <div class="override-auto"><span class="auto-tag">DEFAULT</span>33%</div>
-          <div class="override-input">
-            <input type="number" id="s_p1tax" placeholder="33" step="0.5">
-          </div>
-        </div>
-
-        <div class="override-row">
-          <div>
-            <div class="override-label">Person 2 — effective tax rate</div>
-            <div class="override-desc">Combined rate for self-employment / contract income</div>
-          </div>
-          <div class="override-auto"><span class="auto-tag">DEFAULT</span>28%</div>
-          <div class="override-input">
-            <input type="number" id="s_p2tax" placeholder="28" step="0.5">
-          </div>
-        </div>
-
-        <div class="panel-section" style="margin-top:20px">
-          <div class="panel-section-label">
-            <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><circle cx="8" cy="8" r="5.5"/><path d="M8 6v4M8 5h.01"/></svg>
-            CPP — Canada Pension Plan (Person 2)
-          </div>
-        </div>
-
-        <div class="override-row">
-          <div>
-            <div class="override-label">Self-employment CPP rate</div>
-            <div class="override-desc">Self-employed pay both employee + employer share (~11.88%)</div>
-          </div>
-          <div class="override-auto"><span class="auto-tag">DEFAULT</span>11.88%</div>
-          <div class="override-input">
-            <input type="number" id="s_cpp" placeholder="11.88" step="0.01">
-          </div>
-        </div>
-
-        <div class="override-row">
-          <div>
-            <div class="override-label">CPP annual maximum</div>
-            <div class="override-desc">Contribution caps at this amount regardless of income</div>
-          </div>
-          <div class="override-auto"><span class="auto-tag">DEFAULT</span>$8,068</div>
-          <div class="override-input">
-            <input type="number" id="s_cpp_cap" placeholder="8068">
-          </div>
-        </div>
-
-      </div>
-
-    </div>
-
-      <!-- ── ABOUT PANEL ── -->
-      <div class="modal-panel" id="mpanel-about">
-
-        <!-- App header -->
-        <div style="text-align:center;padding:20px 0 16px;border-bottom:1px solid var(--border)">
-          <div style="width:48px;height:48px;border-radius:12px;background:var(--blue);
-                      display:flex;align-items:center;justify-content:center;margin:0 auto 10px">
-            <svg width="24" height="24" viewBox="0 0 16 16" fill="none" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 7L8 2l6 5v7a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1z"/><path d="M6 14V9h4v5"/></svg>
-          </div>
-          <div style="font-size:16px;font-weight:700;color:var(--text);letter-spacing:-.3px">Housing Feasibility</div>
-          <div style="font-size:11px;color:var(--text3);margin-top:3px">GTA home purchase calculator &middot; Ontario &amp; Federal tax math</div>
-          <div style="font-size:10px;color:var(--text3);margin-top:4px;opacity:.8">Estimates only &middot; Not financial or legal advice</div>
-          <div style="display:flex;flex-wrap:wrap;gap:5px;justify-content:center;margin-top:10px">
-            <span style="font-size:10px;padding:3px 8px;border-radius:10px;background:var(--bg3);color:var(--text2)">CMHC</span>
-            <span style="font-size:10px;padding:3px 8px;border-radius:10px;background:var(--bg3);color:var(--text2)">LTT + rebates</span>
-            <span style="font-size:10px;padding:3px 8px;border-radius:10px;background:var(--bg3);color:var(--text2)">Stress test</span>
-            <span style="font-size:10px;padding:3px 8px;border-radius:10px;background:var(--bg3);color:var(--text2)">Multi-income</span>
-            <span style="font-size:10px;padding:3px 8px;border-radius:10px;background:var(--bg3);color:var(--text2)">Self-employed</span>
-            <span style="font-size:10px;padding:3px 8px;border-radius:10px;background:var(--bg3);color:var(--text2)">GDS / TDS</span>
-          </div>
-        </div>
-
-        <!-- Privacy — above Umer -->
-        <div style="display:flex;align-items:flex-start;gap:10px;
-                    margin:12px 0;padding:11px 13px;
-                    background:var(--green-bg);border-radius:var(--radius);
-                    border:1px solid rgba(74,222,128,0.18)">
-          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="var(--green)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:1px"><rect x="3" y="7" width="10" height="8" rx="1.5"/><path d="M5 7V5a3 3 0 0 1 6 0v2"/></svg>
-          <div style="font-size:11px;color:var(--text2);line-height:1.6">
-            <strong style="color:var(--text)">100% private &amp; local.</strong>
-            Runs entirely in your browser — no servers, no accounts, no analytics. Your numbers never leave your device. Data persists in <code style="font-family:var(--mono);font-size:10px;background:var(--bg3);padding:1px 4px;border-radius:3px">localStorage</code>; use incognito or hit Reset to clear.
-          </div>
-        </div>
-
-        <!-- Umer Ijaz -->
-        <div style="border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:12px">
-          <div style="padding:9px 14px;background:var(--bg3);
-                      font-size:10px;font-weight:700;text-transform:uppercase;
-                      letter-spacing:.08em;color:var(--text3)">Your real estate agent</div>
-          <div style="padding:14px">
-            <div style="display:flex;align-items:center;gap:12px;margin-bottom:11px">
-              <div style="width:42px;height:42px;border-radius:50%;flex-shrink:0;
-                          background:linear-gradient(135deg,#d4231e,#ff6b35);
-                          display:flex;align-items:center;justify-content:center">
-                <span style="font-size:16px;font-weight:700;color:#fff">U</span>
-              </div>
-              <div>
-                <div style="font-size:14px;font-weight:700;color:var(--text)">Umer Ijaz</div>
-                <div style="font-size:11px;color:var(--text3);margin-top:3px;display:flex;align-items:center;gap:6px">
-                  <span style="background:#d4231e;color:#fff;font-size:9px;font-weight:700;
-                               padding:2px 6px;border-radius:3px;letter-spacing:.04em">CENTURY 21</span>
-                  Greater Toronto Area
-                </div>
-              </div>
-            </div>
-            <p style="font-size:11px;color:var(--text2);line-height:1.7;margin:0 0 12px">
-              Specializing in GTA residential real estate. Whether you&apos;re buying your first home or moving up the ladder, Umer can guide you through the market, negotiate on your behalf, and help you close with confidence.
-            </p>
-            <a href="https://www.c21.ca/directory/agents/umer-ijaz" target="_blank" rel="noopener"
-               style="display:flex;align-items:center;justify-content:center;gap:6px;
-                      padding:9px 16px;background:#d4231e;color:#fff;
-                      border-radius:var(--radius);font-size:12px;font-weight:600;
-                      text-decoration:none">
-              <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 8h12M8 2l6 6-6 6"/></svg>
-              View profile on Century 21
-            </a>
-          </div>
-        </div>
-
-        <!-- Built by -->
-        <div style="border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:10px">
-          <div style="padding:9px 14px;background:var(--bg3);
-                      font-size:10px;font-weight:700;text-transform:uppercase;
-                      letter-spacing:.08em;color:var(--text3)">Built by</div>
-          <div style="padding:12px 14px;display:flex;align-items:center;gap:12px">
-            <div style="width:38px;height:38px;border-radius:10px;flex-shrink:0;
-                        background:linear-gradient(135deg,var(--blue),#7c3aed);
-                        display:flex;align-items:center;justify-content:center">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
-            </div>
-            <div style="flex:1;min-width:0">
-              <div style="font-size:13px;font-weight:600;color:var(--text)">TechMeka</div>
-              <div style="font-size:11px;color:var(--text3);margin-top:2px">Technology &amp; software development</div>
-            </div>
-            <a href="https://techmeka.com" target="_blank" rel="noopener"
-               style="display:inline-flex;align-items:center;gap:5px;
-                      font-size:11px;font-weight:600;color:var(--blue);text-decoration:none;
-                      padding:6px 12px;border:1.5px solid var(--blue);border-radius:var(--radius);
-                      white-space:nowrap;flex-shrink:0;opacity:.9;transition:opacity .15s"
-               onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='.9'">
-              <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 8h12M8 2l6 6-6 6"/></svg>
-              techmeka.com
-            </a>
-          </div>
-        </div>
-
-
-
-      </div>
-
-      <div class="modal-footer">
-        <div class="modal-footer-left">
-          <button class="btn-clear" onclick="clearAllSettings()">Clear all overrides</button>
-        </div>
-        <div style="display:flex;gap:8px">
-          <button class="btn-cancel" onclick="closeSettings()">Cancel</button>
-          <button class="btn-apply" onclick="applySettings()">Apply &amp; recalculate</button>
-        </div>
-      </div>
-
-  </div>
-</div>
-
-
-<!-- ── GLOBAL TOOLTIP ──────────────────────────────────── -->
-<div id="global-tip" role="tooltip" aria-live="polite"></div>
-
-
-<!-- ── DISCLAIMER MODAL ─────────────────────────────────── -->
-<div id="disclaimer-overlay">
-  <div id="disclaimer-box" role="dialog" aria-modal="true" aria-labelledby="disc-title">
-    <div class="disc-header">
-      <div class="disc-icon">
-        <svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="var(--amber)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 2L1.5 13h13L8 2z"/><path d="M8 7v3M8 11.5v.5"/></svg>
-      </div>
-      <div>
-        <div class="disc-title" id="disc-title">Before you begin</div>
-        <div class="disc-sub">Housing Feasibility Calculator</div>
-      </div>
-    </div>
-    <div class="disc-body">
-      This tool provides <strong>estimates only</strong> to help you explore home purchase scenarios in the Greater Toronto Area. Please note:
-      <ul>
-        <li>Results are <strong>not financial, mortgage, or legal advice</strong></li>
-        <li>Tax rates, CMHC premiums, and LTT calculations are approximations based on 2024 rules and may not reflect your exact situation</li>
-        <li>Always verify figures with a <strong>licensed mortgage professional</strong> before making any purchase decisions</li>
-        <li>All data entered stays <strong>100% on your device</strong> — nothing is transmitted or stored externally</li>
-      </ul>
-    </div>
-    <div class="disc-footer">
-      <div class="disc-note">Shown once.<br>Won't appear again on this device.</div>
-      <button class="disc-agree" onclick="acceptDisclaimer()">I understand — let's go</button>
-    </div>
-  </div>
-</div>
 
 </body>
 </html>
